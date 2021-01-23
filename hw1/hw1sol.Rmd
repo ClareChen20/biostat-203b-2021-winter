@@ -168,7 +168,8 @@ Do **not** put this text file `pride_and_prejudice.txt` in Git. Using a `for` lo
 
 3. Using your favorite text editor (e.g., `vi`), type the following and save the file as `middle.sh`:
 **Solution:** Done.See below the appended code for .sh file. 
-Please kindly note that the vi command is extremely slow for me to execute on the teaching server, probably because of the VPN setting. I have tried the exact same code on my local terminal and it works just fine. So I did not execute theses two commands but only demonstrate them below.
+Please kindly note that the vi command is extremely slow for me to execute on the teaching server, probably because of the VPN setting. I have tried the exact same code on my local terminal and it works just fine. So I did not execute theses two commands but only demonstrate them below. The file has been uploaded to the repository.
+
 I first create the file by `vi`, then use `i` bottom to get into inser mode. After modifying the file, I used `wq` to save and quit.
     ```{bash eval=FALSE}
     vi middle.sh
@@ -182,13 +183,17 @@ I first create the file by `vi`, then use `i` bottom to get into inser mode. Aft
 Using `chmod` make the file executable by the owner, and run 
     **Solution:**
     Again this command is not excecuted because of the server issue. I used       700 to make the file executable by the owner only.
-    ``` {bash eval=FALSE}
-    chmod 700 middle.sh
-    middle.sh pride_and_prejudice.txt 20 5
-    ```
+``` {bash eval=FALSE}
+chmod 700 middle.sh
+./middle.sh pride_and_prejudice.txt 20 5
+```
 Explain the output. Explain the meaning of `"$1"`, `"$2"`, and `"$3"` in this shell script. Why do we need the first line of the shell script?
-    **Solution:** 
-    The `"$1"`, `"$2"`, and `"$3"` are the position parameters of the content     in the file. The first line of the shell script shows the environment         (shell) it is using.
+**Solution:** 
+The `"$1"`, `"$2"`, and `"$3"` are the position parameters of the content     in the file. The first line of the shell script shows the environment         (shell) it is using.
+    When I run the code on my local terminal, I got 
+    Author: Jane Austen
+    Editor: R. W. (Robert William) Chapman
+Those are the first and second lines in the objective files, following the    command we put in the middle.sh file. 
     
     
 ### Q4. More fun with Linux
@@ -261,7 +266,7 @@ time sleep 5
 history | tail
 ```
 
-
+**Thank you so much for your time!**
 
 
 
