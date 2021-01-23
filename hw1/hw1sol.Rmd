@@ -146,6 +146,15 @@ zcat /usr/203b-data/mimic-iv/core/admissions.csv.gz | awk -F ',' '{print $12}' |
     ```
 Do **not** put this text file `pride_and_prejudice.txt` in Git. Using a `for` loop, how would you tabulate the number of times each of the four characters is mentioned?
 
+**Solution:** We can see from the results that Elizabeth is the most mentioned name, appreared 634 in the book. Darcy came the second, with a number of 417.
+    ```{bash eval=FALSE}
+    declare -a Names=("Elizabeth" "Jane" "Lydia" "Darcy" )
+    for var in "${Names[@]}"
+      do
+      grep -o $var pride_and_prejudice.txt | wc -l
+    done
+    ```
+
 2. What's the difference between the following two commands?
     ```{bash eval=FALSE}
     echo 'hello, world' > test1.txt
@@ -154,6 +163,8 @@ Do **not** put this text file `pride_and_prejudice.txt` in Git. Using a `for` lo
     ```{bash eval=FALSE}
     echo 'hello, world' >> test2.txt
     ```
+**Solution:** The `>` command overwrites the test1 file once we run the code, and the `>>`` command appends the test to the test2 file.
+
 
 3. Using your favorite text editor (e.g., `vi`), type the following and save the file as `middle.sh`:
     ```{bash eval=FALSE}
@@ -162,12 +173,18 @@ Do **not** put this text file `pride_and_prejudice.txt` in Git. Using a `for` lo
     # Usage: bash middle.sh filename end_line num_lines
     head -n "$2" "$1" | tail -n "$3"
     ```
+   **Solution:** Done
+   
 Using `chmod` make the file executable by the owner, and run 
     ```{bash eval=FALSE}
     ./middle.sh pride_and_prejudice.txt 20 5
     ```
 Explain the output. Explain the meaning of `"$1"`, `"$2"`, and `"$3"` in this shell script. Why do we need the first line of the shell script?
-
+    **Solution:** 
+    ```{bash eval=FALSE}
+    chomd 700 middle.sh
+    ```
+    The `"$1"`, `"$2"`, and `"$3"` are the position parameters of the content     in the file. The first line of the shell script shows the environment it      is using.
 ### Q4. More fun with Linux
 
 Try these commands in Bash and interpret the results: `cal`, `cal 2021`, `cal 9 1752` (anything unusual?), `date`, `hostname`, `arch`, `uname -a`, `uptime`, `who am i`, `who`, `w`, `id`, `last | head`, `echo {con,pre}{sent,fer}{s,ed}`, `time sleep 5`, `history | tail`.
