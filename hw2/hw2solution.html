@@ -383,11 +383,9 @@ summary {
 <li><a href="#q1.-physionet-credential">Q1. PhysioNet credential</a><ul>
 <li><a href="#solution">Solution:</a></li>
 </ul></li>
-<li><a href="#q2.-read.csv-base-r-vs-read_csv-tidyverse-vs-fread-data.table">Q2. <code>read.csv</code> (base R) vs <code>read_csv</code> (tidyverse) vs <code>fread</code> (data.table)</a><ul>
-<li><a href="#solution-1">Solution:</a></li>
-</ul></li>
+<li><a href="#q2.-read.csv-base-r-vs-read_csv-tidyverse-vs-fread-data.table">Q2. <code>read.csv</code> (base R) vs <code>read_csv</code> (tidyverse) vs <code>fread</code> (data.table)</a></li>
 <li><a href="#q3.-icu-stays">Q3. ICU stays</a><ul>
-<li><a href="#solution-2">Solution:</a></li>
+<li><a href="#solution-1">Solution:</a></li>
 </ul></li>
 <li><a href="#q4.-admission-data">Q4. <code>admission</code> data</a></li>
 <li><a href="#q5.-patient-data">Q5. <code>patient</code> data</a></li>
@@ -510,63 +508,7 @@ A caption
 <div id="q2.-read.csv-base-r-vs-read_csv-tidyverse-vs-fread-data.table" class="section level2">
 <h2>Q2. <code>read.csv</code> (base R) vs <code>read_csv</code> (tidyverse) vs <code>fread</code> (data.table)</h2>
 <p>There are quite a few utilities in R for reading data files. Let us test the speed of reading a moderate sized compressed csv file, <code>admissions.csv.gz</code>, by three programs: <code>read.csv</code> in base R, <code>read_csv</code> in tidyverse, and <code>fread</code> in the popular data.table package. Is there any speed difference?</p>
-<div id="solution-1" class="section level3">
-<h3>Solution:</h3>
-<p>Read in ‘icustays’ data with different commands:</p>
-<pre class="r"><code>icustays_tble &lt;- read_csv(str_c(mimic_path, &quot;/icu/icustays.csv.gz&quot;)) %&gt;%
-  print(width = Inf)</code></pre>
-<pre><code>## 
-## ── Column specification ────────────────────────────────────────────────────────
-## cols(
-##   subject_id = col_double(),
-##   hadm_id = col_double(),
-##   stay_id = col_double(),
-##   first_careunit = col_character(),
-##   last_careunit = col_character(),
-##   intime = col_datetime(format = &quot;&quot;),
-##   outtime = col_datetime(format = &quot;&quot;),
-##   los = col_double()
-## )</code></pre>
-<pre><code>## # A tibble: 69,619 x 8
-##    subject_id  hadm_id  stay_id first_careunit                     
-##         &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt; &lt;chr&gt;                              
-##  1   17823467 27561644 35964304 Coronary Care Unit (CCU)           
-##  2   15772648 26147926 39637383 Trauma SICU (TSICU)                
-##  3   13713711 25848902 36363748 Trauma SICU (TSICU)                
-##  4   13173210 22338446 38210858 Coronary Care Unit (CCU)           
-##  5   10213765 28522861 39765853 Trauma SICU (TSICU)                
-##  6   17530304 21776160 35848367 Trauma SICU (TSICU)                
-##  7   10297774 20364526 37788595 Coronary Care Unit (CCU)           
-##  8   16766597 21185791 39262919 Trauma SICU (TSICU)                
-##  9   17684317 28656350 36989766 Trauma SICU (TSICU)                
-## 10   15693895 21203492 34766377 Surgical Intensive Care Unit (SICU)
-##    last_careunit                       intime              outtime            
-##    &lt;chr&gt;                               &lt;dttm&gt;              &lt;dttm&gt;             
-##  1 Coronary Care Unit (CCU)            2138-05-09 05:08:00 2138-05-11 16:55:34
-##  2 Trauma SICU (TSICU)                 2146-06-18 18:35:00 2146-06-21 17:41:00
-##  3 Trauma SICU (TSICU)                 2157-09-15 15:30:00 2157-09-17 18:18:49
-##  4 Coronary Care Unit (CCU)            2178-02-12 17:13:50 2178-02-15 14:55:14
-##  5 Trauma SICU (TSICU)                 2113-04-10 14:11:00 2113-04-11 10:55:19
-##  6 Trauma SICU (TSICU)                 2129-03-21 07:09:00 2129-03-23 20:23:23
-##  7 Coronary Care Unit (CCU)            2194-05-10 21:35:40 2194-05-13 14:58:11
-##  8 Trauma SICU (TSICU)                 2115-07-11 23:15:59 2115-07-13 16:52:06
-##  9 Trauma SICU (TSICU)                 2148-04-14 22:03:00 2148-04-15 22:36:50
-## 10 Surgical Intensive Care Unit (SICU) 2147-06-02 23:31:46 2147-06-15 15:56:59
-##       los
-##     &lt;dbl&gt;
-##  1  2.49 
-##  2  2.96 
-##  3  2.12 
-##  4  2.90 
-##  5  0.864
-##  6  2.55 
-##  7  2.72 
-##  8  1.73 
-##  9  1.02 
-## 10 12.7  
-## # … with 69,609 more rows</code></pre>
 <p>In this homework, we stick to the tidyverse.</p>
-</div>
 </div>
 <div id="q3.-icu-stays" class="section level2">
 <h2>Q3. ICU stays</h2>
@@ -582,10 +524,10 @@ A caption
 </li>
 <li>last ICU unit</li>
 </ul>
-<div id="solution-2" class="section level3">
+<div id="solution-1" class="section level3">
 <h3>Solution:</h3>
 <p>Read in ‘icustays’ data.</p>
-<pre class="r"><code>icustays_tble &lt;- read_csv(str_c(mimic_path, &quot;/icu/icustays.csv.gz&quot;)) %&gt;%
+<pre class="r"><code>icustays_table &lt;- read_csv(str_c(mimic_path, &quot;/icu/icustays.csv.gz&quot;)) %&gt;%
   print(width = Inf)</code></pre>
 <pre><code>## 
 ## ── Column specification ────────────────────────────────────────────────────────
@@ -637,6 +579,11 @@ A caption
 ##  9  1.02 
 ## 10 12.7  
 ## # … with 69,609 more rows</code></pre>
+<p>Check for numbers of unique ‘stay_id’</p>
+<pre class="r"><code>icustays_table %&gt;%
+  distinct(stay_id) %&gt;%
+  nrow()</code></pre>
+<pre><code>## [1] 69619</code></pre>
 </div>
 </div>
 <div id="q4.-admission-data" class="section level2">

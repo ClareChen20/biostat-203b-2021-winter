@@ -49,15 +49,6 @@ knitr::include_graphics("Credential.jpg")
 
 There are quite a few utilities in R for reading data files. Let us test the speed of reading a moderate sized compressed csv file, `admissions.csv.gz`, by three programs: `read.csv` in base R, `read_csv` in tidyverse, and `fread` in the popular data.table package. Is there any speed difference?
 
-### Solution:
-
-Read in 'icustays' data with different commands:
-```{r}
-icustays_tble <- read_csv(str_c(mimic_path, "/icu/icustays.csv.gz")) %>%
-  print(width = Inf)
-```
-
-
 In this homework, we stick to the tidyverse. 
 
 ## Q3. ICU stays
@@ -74,8 +65,22 @@ In this homework, we stick to the tidyverse.
 
 Read in 'icustays' data.
 ```{r}
-icustays_tble <- read_csv(str_c(mimic_path, "/icu/icustays.csv.gz")) %>%
+icustays_table <- read_csv(str_c(mimic_path, "/icu/icustays.csv.gz")) %>%
   print(width = Inf)
+```
+
+Check for numbers of unique 'stay_id'
+```{r}
+icustays_table %>%
+  distinct(stay_id) %>%
+  nrow()
+```
+
+Check for numbers of unique 'subject_id'
+```{r}
+icustays_table %>%
+  distinct(subject_id) %>%
+  nrow()
 ```
 
 ## Q4. `admission` data
