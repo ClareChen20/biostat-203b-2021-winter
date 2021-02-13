@@ -110,8 +110,7 @@ icustays %>%
   mutate(length = as.numeric(outtime - intime)) %>%
   select(length) %>%
   ggplot(aes(x = log(length))) +
-  geom_histogram(color = 'black', 
-                 fill = 'lightblue', bins = 40) +
+  geom_histogram(bins = 40) +
   xlab("Log of ICU stays") +
   ylab("Density")
 ```
@@ -123,7 +122,7 @@ icustays %>%
   geom_histogram(aes(x = log(los)), bins = 40)
 ```
 
-Note that the histograms from the above two methods are essentially the same.
+Note that the histograms from the above two methods are approximately the same.
 
 - First ICU unit  
 ```{r}
@@ -194,7 +193,7 @@ admission %>%
 admission %>%
   distinct(., subject_id, .keep = T) %>%
   ggplot(data = admission, mapping = aes(x = wday(admittime))) +
-    geom_histogram(color = 'black', fill = 'lightblue') +
+    geom_histogram(color = 'black', fill = 'lightblue', bins = 5) +
     xlab("Admission Week Day") +
     ylab("Density") +
     scale_x_continuous(breaks=seq(0, 7, 1))
@@ -204,10 +203,11 @@ admission %>%
 ```{r}
 admission %>%
   distinct(., subject_id, .keep = T) %>%
-  ggplot(data = admission, mapping = aes(x = hours(admittime))) +
-    geom_histogram(color = 'black', fill = 'lightblue') +
-    xlab("Admission hour") +
-    ylab("Density")
+  ggplot(data = admission, mapping = aes(x = hour(admittime))) +
+    geom_histogram(color = 'black', fill = 'lightblue', bins = 24) +
+    xlab("Admission Hours") +
+    ylab("Density") +
+    scale_x_continuous(breaks=seq(0, 24, 1))
 ```
 
 
@@ -233,11 +233,12 @@ admission %>%
 
 - number of admissions per patient  
 ```{r, eval=FALSE}
-admission %>%
-  ggplot(data = admission, mapping = aes(x = count(hadm_id))) + 
-    geom_histogram(position = "identity") +
-    scale_x_discrete(guide = guide_axis(n.dodge=3)) +
-    labs(title = 'Number of admissions')
+admission1 <- admission %>% count(subject_id)
+ggplot(data = admission1, mapping = aes(x = n, y = stat(count))) +
+  geom_bar() +
+  scale_x_continuous(limits = c(0, 30)) + 
+  xlab("Number of Admissions") + 
+  ylab("Count")
 ```
 
 - admission location  
@@ -305,8 +306,10 @@ admission %>%
 admission %>%
   distinct(., subject_id, .keep = T) %>%
   ggplot(data = admission, mapping = aes(x = hospital_expire_flag)) + 
-    stat_count(position = "identity", color = "black", fill = "pink") +
+    stat_count(position = "identity", color = "black", fill = "lightblue") +
     labs(title = 'Death in the hospital')
+    # To show the counts, we can add the following code
+    # stat_bin(aes(y=..count.., label=..count..), geom="text")
 ```
 
 Note it is possible that one patient (uniquely identified by the `SUBJECT_ID`) is admitted into hospital multiple times. When summarizing some demographic information, it makes sense to summarize based on unique patients. 
@@ -334,10 +337,6 @@ patients %>%
   ggplot(mapping = aes(x = gender)) +
     stat_count(position = "identity", color = "black", fill = "blue", bins = 30) +
     geom_density()
-    theme_classic()
-
-Female <- sum(patients$gender == 'F')
-Male <- sum(patients$gender == 'M')
 ```
 
 - `anchor_age` (explain pattern you see)
@@ -350,7 +349,6 @@ patients %>%
   geom_histogram(aes(y = ..density..), position = "identity", 
                  color = "black", fill = "blue") +
   geom_density()
-  theme_classic()
 ```
 
 
@@ -442,14 +440,33 @@ We are interested in the vitals for ICU patients: heart rate, mean and systolic 
 
 `d_items.csv.gz` (<https://mimic-iv.mit.edu/docs/datasets/icu/d_items/>) is the dictionary for the `ITEMID` in `CHARTEVENTS.csv`. Find potential values of `ITEMID` that correspond to systolic blood pressure, i.e., `LABEL` contains the string `systolic`. 
 
-```{r, eval=FALSE}
-transactFile <- str_c(mimic_path,"/icu/chartevents.csv.gz")
-chunkSize <- 1000
-con <- file(description= transactFile, open="r")
-data <- read.table(con, nrows=chunkSize, header=T, fill=TRUE, sep=",")
-close(con)
+### Solution:
+
+Read in dictionary for chartevent:
+```{r}
+dchartitems_tble <- read_csv(str_c(mimic_path, "/icu/d_items.csv.gz")) %>%
+  print(width = Inf)
 ```
 
+Inspect itemids corresponding to the items we require:
+```{r}
+for (chartitem in c("heart rate", "Blood Pressure mean", "systolic",
+                    "temperature", "Sp02", "respiratory rate")) {
+  print(str_interp("search for ${chartitem}"))
+  dchartitems_tble %>%
+    filter(str_detect(label, regex(chartitem, ignore_case = T))) %>%
+    print (width = Inf)
+  }
+```
+
+```{r, eval = FALSE}
+chartitem_itemid <- dchartitems_tble %>%
+  filter(itemid %in% c(220045, 220052, 220181, 220179, 
+                       220050, 223761, 229862, 220210)) %>%
+  print (width = Inf)
+```
+
+Then the part I kept fail was to read in the `chartevents.csv.gz` file, which I could not get run on the server. I have tried to download it to local but the server kept crushing while downloading. 
 
 ## Q8. Putting things together
 
@@ -464,4 +481,23 @@ and columns contains at least following variables
 - all variables in `admission.csv.gz`  
 - first lab measurements during ICU stay  
 - first vitals measurement during ICU stay  
-- an indicator variable whether the patient died within 30 days of hospital admission  
+- an indicator variable whether the patient died within 30 days of hospital admission
+
+```{r, eval = FALSE}
+icustays %>%
+  group_by(subject_id) %>%
+  filter(rank(intime) == 1) %>%
+  ungroup() %>%
+  left_join(admission, by = c("subject_id", "hadm_id")) %>%
+  left_join(patients, by = "subject_id") %>%
+  mutate(age_at_adm = year(admittime) - anchor_year + anchor_age) %>%
+  filter(age_at_birth > 18) %>%
+  print(width = Inf)
+```
+
+
+
+
+
+
+
