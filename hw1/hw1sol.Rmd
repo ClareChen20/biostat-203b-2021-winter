@@ -47,9 +47,9 @@ Here is my [completion report](https://www.citiprogram.org/verify/?k796dd661-cb1
 Here is my [completion certificate](https://www.citiprogram.org/verify/?wbfa24715-0661-4cbf-a999-7a7d5e54bf68-40357427).
 
 2. The `/usr/203b-data/mimic-iv/` folder on teaching server contains data sets from MIMIC-IV. Refer to <https://mimic-iv.mit.edu/docs/datasets/> for details of data files.  
-  ```{bash}
-  ls -l /usr/203b-data/mimic-iv
-  ```
+    ```{bash}
+    ls -l /usr/203b-data/mimic-iv
+    ```
 Please, do **not** put these data files into Git; they are big. Do **not** copy them into your directory. Do **not** decompress the gz data files. These create unnecessary big files on storage and are not big data friendly practices. Just read from the data folder `/usr/203b-data/mimic-iv` directly in following exercises. 
 
 **Solution:** Got it
@@ -59,11 +59,11 @@ Please, do **not** put these data files into Git; they are big. Do **not** copy 
 3. Display the contents in the folders `core`, `hosp`, `icu`. What are the functionalities of the bash commands `zcat`, `zless`, `zmore`, and `zgrep`? 
 
 **Solution:**
-  ``` {bash}
-  ls -l /usr/203b-data/mimic-iv/core
-  ls -l /usr/203b-data/mimic-iv/hosp
-  ls -l /usr/203b-data/mimic-iv/icu
-  ```
+    ```{bash}
+    ls -l /usr/203b-data/mimic-iv/core
+    ls -l /usr/203b-data/mimic-iv/hosp
+    ls -l /usr/203b-data/mimic-iv/icu
+    ```
 
 `zcat` can be used to display the content of compressed file without uncompressing them in advance. 
 
@@ -86,56 +86,63 @@ Overall, the functionalities of those commands are similar to `zcat`,`zmore`,`zl
 
 Display the number of lines in each data file using a similar loop.
 **Solution:**
-```{bash}
-for datafile in /usr/203b-data/mimic-iv/core/*.gz
-      do
-        wc -l $datafile
-done 
-```
+    ```{bash}
+    for datafile in /usr/203b-data/mimic-iv/core/*.gz
+          do
+           zcat $datafile | wc -l 
+    done 
+    ```
 
 
 4. Display the first few lines of `admissions.csv.gz`. How many rows are in this data file? How many unique patients (identified by `subject_id`) are in this data file? What are the possible values taken by each of the variable `admission_type`, `admission_location`, `insurance`, `language`, `marital_status`, and `ethnicity`? Also report the count for each unique value of these variables. (Hint: combine Linux commands `zcat`, `head`/`tail`, `awk`, `uniq`, `wc`, and so on.)
 
 **Solution:** See below the first 10 lines of `admissions.csv.gz`.
 The total number of rows in this file is 65080 (found in the previous part).
-``` {bash}
-cd /usr/203b-data/mimic-iv/core
-zcat admissions.csv.gz | head -10
-```
+    ``` {bash}
+    cd /usr/203b-data/mimic-iv/core
+    zcat admissions.csv.gz | head -10
+    ```
 The unique patients can be found by counting the number of unique subject_id in the first column. Note that the first row is heading, so the total number of unique patients should be 257366.
-``` {bash}
-zcat /usr/203b-data/mimic-iv/core/admissions.csv.gz|awk -F ',' '{print $1}' |sort|uniq -c|wc -l 
-```
+    ``` {bash}
+    zcat /usr/203b-data/mimic-iv/core/admissions.csv.gz |
+    awk -F ',' '{ print $1 }' | sort | uniq -c | wc -l 
+    ```
 
 The possible values taken by `admission_type`: 
-``` {bash}
-zcat /usr/203b-data/mimic-iv/core/admissions.csv.gz | awk -F ',' '{print $6}' |sort|uniq -c
-```
+    ``` {bash}
+    zcat /usr/203b-data/mimic-iv/core/admissions.csv.gz | 
+    awk -F ',' '{ print $6 }' | sort | uniq -c
+    ```
 
 The possible values taken by `admission_location`: 
-``` {bash}
-zcat /usr/203b-data/mimic-iv/core/admissions.csv.gz | awk -F ',' '{print $7}' |sort|uniq -c
-```
+    ``` {bash}
+    zcat /usr/203b-data/mimic-iv/core/admissions.csv.gz | 
+    awk -F ',' '{ print $7 }' | sort | uniq -c
+    ```
 
 The possible values taken by `insurance`: 
-``` {bash}
-zcat /usr/203b-data/mimic-iv/core/admissions.csv.gz | awk -F ',' '{print $9}' |sort|uniq -c
-```
+    ``` {bash}
+    zcat /usr/203b-data/mimic-iv/core/admissions.csv.gz | 
+    awk -F ',' '{ print $9 }' | sort | uniq -c
+    ```
 
 The possible values taken by `marital_status`: 
-``` {bash}
-zcat /usr/203b-data/mimic-iv/core/admissions.csv.gz | awk -F ',' '{print $11}' |sort|uniq -c
-```
+    ``` {bash}
+    zcat /usr/203b-data/mimic-iv/core/admissions.csv.gz | 
+    awk -F ',' '{ print $11 }'| sort | uniq -c
+    ```
 
 The possible values taken by `languages`: 
-``` {bash}
-zcat /usr/203b-data/mimic-iv/core/admissions.csv.gz | awk -F ',' '{print $10}' |sort|uniq -c
-```
+    ``` {bash}
+    zcat /usr/203b-data/mimic-iv/core/admissions.csv.gz | 
+    awk -F ',' '{ print $10 }' | sort | uniq -c
+    ```
 
 The possible values taken by `ethics`: 
-``` {bash}
-zcat /usr/203b-data/mimic-iv/core/admissions.csv.gz | awk -F ',' '{print $12}' |sort|uniq -c
-```
+    ``` {bash}
+    zcat /usr/203b-data/mimic-iv/core/admissions.csv.gz | 
+    awk -F ',' '{ print $12 }' | sort | uniq -c
+    ```
 
 
 ## Q3. Who's popular in Price and Prejudice
@@ -183,10 +190,10 @@ I first create the file by `vi`, then use `i` bottom to get into inser mode. Aft
 Using `chmod` make the file executable by the owner, and run 
     **Solution:**
     Again this command is not excecuted because of the server issue. I used       700 to make the file executable by the owner only.
-``` {bash eval=FALSE}
-chmod 700 middle.sh
-./middle.sh pride_and_prejudice.txt 20 5
-```
+    ``` {bash eval=FALSE}
+    chmod 700 middle.sh
+    ./middle.sh pride_and_prejudice.txt 20 5
+    ```
 Explain the output. Explain the meaning of `"$1"`, `"$2"`, and `"$3"` in this shell script. Why do we need the first line of the shell script?
 **Solution:** 
 The `"$1"`, `"$2"`, and `"$3"` are the position parameters of the content     in the file. The first line of the shell script shows the environment         (shell) it is using.
@@ -202,69 +209,69 @@ Try these commands in Bash and interpret the results: `cal`, `cal 2021`, `cal 9 
 
 **Solution:** 
 `cal` displays the calender for current month.
-```{bash}
-cal
-```
+    ```{bash}
+    cal
+    ```
 `cal 2021` displays the calender for the year 2021.
-```{bash}
-cal 2021
-```
+    ```{bash}
+    cal 2021
+    ```
 `cal 9 1752` displays the calender for Sep 1752. Note that day 3-13 are missing. I This is only happening to Sep 1752 because the 11 days were skipped to make uo for lack of leap year adjustment.
-```{bash}
-cal 9 1752
-```
+    ```{bash}
+    cal 9 1752
+    ```
 `date` shows the current date and time.
-```{bash}
-date
-```
+    ```{bash}
+    date
+    ```
 `hostname` shows the server we are using.
-```{bash}
-hostname
-```
+    ```{bash}
+    hostname
+    ```
 `arch` prints the computer architecture.
-```{bash}
-arch
-```
+    ```{bash}
+    arch
+    ```
 `uname -a` prints the basic system information, and the -a indicates we want all available information to be displayed.
-```{bash}
-uname -a
-```
+    ```{bash}
+    uname -a
+    ```
 `uptime` shows the information about the time, number of users, how long the system has been running and the system load average.
-```{bash}
-uptime
-```
+    ```{bash}
+    uptime
+    ```
 `who am i` returns the username.
-```{bash}
-who am i
-```
+    ```{bash}
+    who am i
+    ```
 `who` displays the current running level, also it shows the list of logged in users and their IP addresses.
-```{bash}
-who
-```
+    ```{bash}
+    who
+    ```
 `w` shows the list of logged in users and other information of them
-```{bash}
-w
-```
+    ```{bash}
+    w
+    ```
 `id` shows the identity information of the current login account, including UID, gid and so on.
-```{bash}
-id
-```
+    ```{bash}
+    id
+    ```
 `last|head` show the list of all the users logged in and the time they logged out (shown still logged in if they are currently working on the server).
-```{bash}
-last|head
-```
+    ```{bash}
+    last | head
+    ```
 `echo {con,pre}{sent,fer}{s,ed}` is returning exactly what is following the term `echo`.
-```{bash}
-echo {con,pre}{sent,fer}{s,ed}
-```
+    ```{bash}
+    echo {con,pre}{sent,fer}{s,ed}
+    ```
 `time sleep 5` the system paused for 5 seconds when excecuting.
-```{bash}
-time sleep 5
-```
+    ```{bash}
+    time sleep 5
+    ```
 `history | tail` displays the last 10 commands I ran in the terminal.
-```{bash}
-history | tail
-```
+    ```{bash}
+    history | tail
+    ```
 
 **Thank you so much for your time!**
 
