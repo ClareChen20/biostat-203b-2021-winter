@@ -747,46 +747,34 @@ dbname &lt;- &#39;mimiciv&#39;
 <ol start="6" style="list-style-type: decimal">
 <li>Connect to the <code>mimic_labevents_icu</code> table.</li>
 </ol>
-<pre class="r"><code>labevents_tble &lt;- tbl(con, Id(schema = &quot;mimic_hosp&quot;, table = &quot;labevents&quot;)) %&gt;%
+<pre class="r"><code>labevents_tble &lt;- tbl(con, Id(schema = &quot;public&quot;, table = &quot;mimic_labevents_icu&quot;)) %&gt;%
   print(width = Inf)</code></pre>
-<pre><code>## # Source:   table&lt;&quot;mimic_hosp&quot;.&quot;labevents&quot;&gt; [?? x 15]
+<pre><code>## # Source:   table&lt;&quot;public&quot;.&quot;mimic_labevents_icu&quot;&gt; [?? x 13]
 ## # Database: postgres 10.0.16 [postgres@/var/run/postgresql:5432/mimiciv]
-##    labevent_id subject_id  hadm_id specimen_id itemid charttime          
-##          &lt;int&gt;      &lt;int&gt;    &lt;int&gt;       &lt;int&gt;  &lt;int&gt; &lt;dttm&gt;             
-##  1    30331194   12455438 24471620     6107018  51277 2151-05-06 04:45:00
-##  2    30331195   12455438 24471620     6107018  51279 2151-05-06 04:45:00
-##  3    30331196   12455438 24471620     6107018  51301 2151-05-06 04:45:00
-##  4    30331197   12455438 24471620     6107018  52167 2151-05-06 04:45:00
-##  5    30331199   12455438 24471620    70876201  50882 2151-05-06 04:45:00
-##  6    30331200   12455438 24471620    70876201  50893 2151-05-06 04:45:00
-##  7    30331201   12455438 24471620    70876201  50902 2151-05-06 04:45:00
-##  8    30331202   12455438 24471620    70876201  50912 2151-05-06 04:45:00
-##  9    30331204   12455438 24471620    70876201  50934 2151-05-06 04:45:00
-## 10    30331205   12455438 24471620    70876201  50947 2151-05-06 04:45:00
-##    storetime           value valuenum valueuom ref_range_lower ref_range_upper
-##    &lt;dttm&gt;              &lt;chr&gt;    &lt;dbl&gt; &lt;chr&gt;              &lt;dbl&gt;           &lt;dbl&gt;
-##  1 2151-05-06 06:24:00 13.9     13.9  %                   10.5            15.5
-##  2 2151-05-06 06:24:00 3.55      3.55 m/uL                 3.9             5.2
-##  3 2151-05-06 06:24:00 16.3     16.3  K/uL                 4              10  
-##  4 2151-05-06 06:24:00 46.7     46.7  fL                  35.1            46.3
-##  5 2151-05-06 07:05:00 23       23    mEq/L               22              32  
-##  6 2151-05-06 07:05:00 8.8       8.8  mg/dL                8.4            10.3
-##  7 2151-05-06 07:05:00 106     106    mEq/L               96             108  
-##  8 2151-05-06 07:05:00 0.7       0.7  mg/dL                0.4             1.1
-##  9 2151-05-06 07:05:00 3         3    &lt;NA&gt;                NA              NA  
-## 10 2151-05-06 07:05:00 1         1    &lt;NA&gt;                NA              NA  
-##    flag     priority comments
-##    &lt;chr&gt;    &lt;chr&gt;    &lt;chr&gt;   
-##  1 &lt;NA&gt;     STAT     &lt;NA&gt;    
-##  2 abnormal STAT     &lt;NA&gt;    
-##  3 abnormal STAT     &lt;NA&gt;    
-##  4 abnormal STAT     &lt;NA&gt;    
-##  5 &lt;NA&gt;     STAT     &lt;NA&gt;    
-##  6 &lt;NA&gt;     STAT     &lt;NA&gt;    
-##  7 &lt;NA&gt;     STAT     &lt;NA&gt;    
-##  8 &lt;NA&gt;     STAT     &lt;NA&gt;    
-##  9 &lt;NA&gt;     STAT     &lt;NA&gt;    
-## 10 &lt;NA&gt;     STAT     &lt;NA&gt;    
+##    subject_id  hadm_id bicarbonate calcium chloride creatinine glucose magnesium
+##         &lt;int&gt;    &lt;int&gt;       &lt;dbl&gt;   &lt;dbl&gt;    &lt;dbl&gt;      &lt;dbl&gt;   &lt;dbl&gt;     &lt;dbl&gt;
+##  1   10000032 29079034          21     9.3      102        0.5     115       2.3
+##  2   10000980 26913865          23     9.2      103        2.2     144       2  
+##  3   10001217 24597018          23     8.2      104        0.4     113       1.9
+##  4   10001725 25563031          24     9.1      106        0.8     146       1.5
+##  5   10001884 26184834          33     9.8       96        1.1     148       2.2
+##  6   10002013 23581541          23    NA        109        1.1      98       2.1
+##  7   10002155 20345487          NA    NA         NA       NA        NA      NA  
+##  8   10002155 23822395          25     8.8      106        0.9      95       2  
+##  9   10002223 22494570          26     8.7      102        0.8      88       2  
+## 10   10002428 28662225          20     7.4       98        0.8      99       1.4
+##    potassium sodium hematocrit   wbc lactate
+##        &lt;dbl&gt;  &lt;dbl&gt;      &lt;dbl&gt; &lt;dbl&gt;   &lt;dbl&gt;
+##  1       4.7    132       34.8   4.1    NA  
+##  2       4.2    139       30.8   5.4    NA  
+##  3       3.6    138       33.6  19      NA  
+##  4       3.9    140       39.1  17      NA  
+##  5       4      136       36    18.4     1.5
+##  6       4      140       28.6  18.2     3.3
+##  7      NA       NA       NA    NA       7.7
+##  8       4.5    139       37.9   5.5    NA  
+##  9       3.9    138       32.5  10.1    NA  
+## 10       3.9    129       28.7  22.4     1.6
 ## # … with more rows</code></pre>
 <ol start="7" style="list-style-type: decimal">
 <li>Connect to <code>mimic_chartevents_icu</code> table.</li>
@@ -840,50 +828,50 @@ dbname &lt;- &#39;mimiciv&#39;
 if (!dir.exists(&quot;mimiciv_shiny&quot;)) {
   dir.create(&quot;mimiciv_shiny&quot;)
 }</code></pre>
-<pre class="r"><code># icustays_tble %&gt;% 
-#   group_by(subject_id) %&gt;%
-#   filter(rank(intime) == 1) %&gt;%
-#   ungroup() %&gt;%
-#   left_join(admissions_tble, by = c(&quot;subject_id&quot;, &quot;hadm_id&quot;)) %&gt;%
-#   left_join(patients_tble, by = &quot;subject_id&quot;) %&gt;%
-#   print(width = Inf)
-  # mutate(age_at_adm = year(admittime) - anchor_year + anchor_age) %&gt;%
-  # filter(age_at_adm &gt; 18) %&gt;%
-  # mutate(indicator30 = ifselse(difftime(deathtime, intime, units = &quot;days&quot;)&lt;=30) %&gt;%
-  # print(width = Inf)
-
-#  left_join(admissions_tbl, by = c(&quot;subject_id&quot;, &quot;hadm_id&quot;)) %&gt;%
-#  left_join(patients_tble, by = &quot;subject_id&quot;) %&gt;%
-#  mutate(age_at_adm = year(admittime) - anchor_year + anchor_age) %&gt;%
-#  filter(age_at_birth &gt; 18) %&gt;%
-#  print(width = Inf) 
-
-icustays_tble %&gt;%
-  # keep only the first ICU stay of each unique patient
-  group_by(subject_id) %&gt;% 
-  filter(rank(intime) == 1) %&gt;% 
-  ungroup() %&gt;% 
-  # merge in admissions and patients tables
-  # left_join(patients_tble, by = c(&quot;subject_id&quot;)) %&gt;%
-  # left_join(admissions_tble, by = c(&quot;subject_id&quot;, &quot;hadm_id&quot;)) %&gt;%
-  print(width = Inf) 
-  # # keep adults only (age at admission &gt;= 18)
-  # mutate(age_at_adm = year(admittime) - anchor_year + anchor_age) %&gt;%
-  # filter(age_at_adm &gt;= 18) %&gt;%
-  # # merge in the labevents and chartevents tables
-  # left_join(labevents_tble, by = c(&quot;subject_id&quot;, &quot;hadm_id&quot;)) %&gt;%
-  # left_join(chartevents_tble, by = c(&quot;subject_id&quot;, &quot;hadm_id&quot;)) %&gt;%
-  # # display the SQL query
-  # show_query() %&gt;%
-  # # collect SQL query result into memory as a tibble
-  # collect() %&gt;% 
-  # # create an indicator for 30-day mortality
-  # mutate(death_30 = ifelse((deathtime - admittime)/(60*24) &lt;= 30,
-  #                          &quot;Yes&quot;, &quot;No&quot;)) %&gt;%
-  # mutate_at(vars(death_30), 
-  #           function(x){ifelse(is.na(x) == TRUE, &quot;No&quot;, x)}) %&gt;%
-  # # save the final tibble
-  # saveRDS(file = &quot;./mimiciv_shiny/icu_cohort.rds&quot;)</code></pre>
+<pre class="r"><code>icustays_tble %&gt;%
+  # Find first ICU stay of each unique patient
+  group_by(subject_id) %&gt;%
+  filter(rank(intime) == 1) %&gt;%
+  ungroup() %&gt;%
+  # Left join the tables
+  left_join(patients_tble, by = c(&quot;subject_id&quot;)) %&gt;%
+  left_join(admissions_tble, by = c(&quot;subject_id&quot;, &quot;hadm_id&quot;)) %&gt;%
+  left_join(labevents_tble, by = c(&quot;subject_id&quot;, &quot;hadm_id&quot;)) %&gt;%
+  left_join(chartevents_tble, by = c(&quot;subject_id&quot;, &quot;hadm_id&quot;, &quot;stay_id&quot;)) %&gt;%
+  # Keep the adults
+  mutate(age_at_adm = year(admittime) - anchor_year + anchor_age) %&gt;%
+  filter(age_at_adm &gt;= 18) %&gt;%
+  # Display &amp; collect the SQL query
+  show_query() %&gt;%
+  collect() %&gt;%
+  # Create an indicator for 30-day mortality
+  mutate(deathin30 = ifelse(deathtime - admittime &lt;= 43200, &quot;Yes&quot;, &quot;No&quot;)) %&gt;%
+  # Save the final tibble
+  saveRDS(str_c(&quot;./mimiciv_shiny/icu_cohort.rds&quot;))</code></pre>
+<pre><code>## &lt;SQL&gt;
+## SELECT *
+## FROM (SELECT &quot;subject_id&quot;, &quot;hadm_id&quot;, &quot;stay_id&quot;, &quot;first_careunit&quot;, &quot;last_careunit&quot;, &quot;intime&quot;, &quot;outtime&quot;, &quot;los&quot;, &quot;gender&quot;, &quot;anchor_age&quot;, &quot;anchor_year&quot;, &quot;anchor_year_group&quot;, &quot;dod&quot;, &quot;admittime&quot;, &quot;dischtime&quot;, &quot;deathtime&quot;, &quot;admission_type&quot;, &quot;admission_location&quot;, &quot;discharge_location&quot;, &quot;insurance&quot;, &quot;language&quot;, &quot;marital_status&quot;, &quot;ethnicity&quot;, &quot;edregtime&quot;, &quot;edouttime&quot;, &quot;hospital_expire_flag&quot;, &quot;bicarbonate&quot;, &quot;calcium&quot;, &quot;chloride&quot;, &quot;creatinine&quot;, &quot;glucose&quot;, &quot;magnesium&quot;, &quot;potassium&quot;, &quot;sodium&quot;, &quot;hematocrit&quot;, &quot;wbc&quot;, &quot;lactate&quot;, &quot;heart_rate&quot;, &quot;non_invasive_blood_pressure_systolic&quot;, &quot;non_invasive_blood_pressure_mean&quot;, &quot;respiratory_rate&quot;, &quot;temperature_fahrenheit&quot;, &quot;arterial_blood_pressure_systolic&quot;, &quot;arterial_blood_pressure_mean&quot;, EXTRACT(year FROM &quot;admittime&quot;) - &quot;anchor_year&quot; + &quot;anchor_age&quot; AS &quot;age_at_adm&quot;
+## FROM (SELECT &quot;LHS&quot;.&quot;subject_id&quot; AS &quot;subject_id&quot;, &quot;LHS&quot;.&quot;hadm_id&quot; AS &quot;hadm_id&quot;, &quot;LHS&quot;.&quot;stay_id&quot; AS &quot;stay_id&quot;, &quot;first_careunit&quot;, &quot;last_careunit&quot;, &quot;intime&quot;, &quot;outtime&quot;, &quot;los&quot;, &quot;gender&quot;, &quot;anchor_age&quot;, &quot;anchor_year&quot;, &quot;anchor_year_group&quot;, &quot;dod&quot;, &quot;admittime&quot;, &quot;dischtime&quot;, &quot;deathtime&quot;, &quot;admission_type&quot;, &quot;admission_location&quot;, &quot;discharge_location&quot;, &quot;insurance&quot;, &quot;language&quot;, &quot;marital_status&quot;, &quot;ethnicity&quot;, &quot;edregtime&quot;, &quot;edouttime&quot;, &quot;hospital_expire_flag&quot;, &quot;bicarbonate&quot;, &quot;calcium&quot;, &quot;chloride&quot;, &quot;creatinine&quot;, &quot;glucose&quot;, &quot;magnesium&quot;, &quot;potassium&quot;, &quot;sodium&quot;, &quot;hematocrit&quot;, &quot;wbc&quot;, &quot;lactate&quot;, &quot;heart_rate&quot;, &quot;non_invasive_blood_pressure_systolic&quot;, &quot;non_invasive_blood_pressure_mean&quot;, &quot;respiratory_rate&quot;, &quot;temperature_fahrenheit&quot;, &quot;arterial_blood_pressure_systolic&quot;, &quot;arterial_blood_pressure_mean&quot;
+## FROM (SELECT &quot;LHS&quot;.&quot;subject_id&quot; AS &quot;subject_id&quot;, &quot;LHS&quot;.&quot;hadm_id&quot; AS &quot;hadm_id&quot;, &quot;stay_id&quot;, &quot;first_careunit&quot;, &quot;last_careunit&quot;, &quot;intime&quot;, &quot;outtime&quot;, &quot;los&quot;, &quot;gender&quot;, &quot;anchor_age&quot;, &quot;anchor_year&quot;, &quot;anchor_year_group&quot;, &quot;dod&quot;, &quot;admittime&quot;, &quot;dischtime&quot;, &quot;deathtime&quot;, &quot;admission_type&quot;, &quot;admission_location&quot;, &quot;discharge_location&quot;, &quot;insurance&quot;, &quot;language&quot;, &quot;marital_status&quot;, &quot;ethnicity&quot;, &quot;edregtime&quot;, &quot;edouttime&quot;, &quot;hospital_expire_flag&quot;, &quot;bicarbonate&quot;, &quot;calcium&quot;, &quot;chloride&quot;, &quot;creatinine&quot;, &quot;glucose&quot;, &quot;magnesium&quot;, &quot;potassium&quot;, &quot;sodium&quot;, &quot;hematocrit&quot;, &quot;wbc&quot;, &quot;lactate&quot;
+## FROM (SELECT &quot;LHS&quot;.&quot;subject_id&quot; AS &quot;subject_id&quot;, &quot;LHS&quot;.&quot;hadm_id&quot; AS &quot;hadm_id&quot;, &quot;stay_id&quot;, &quot;first_careunit&quot;, &quot;last_careunit&quot;, &quot;intime&quot;, &quot;outtime&quot;, &quot;los&quot;, &quot;gender&quot;, &quot;anchor_age&quot;, &quot;anchor_year&quot;, &quot;anchor_year_group&quot;, &quot;dod&quot;, &quot;admittime&quot;, &quot;dischtime&quot;, &quot;deathtime&quot;, &quot;admission_type&quot;, &quot;admission_location&quot;, &quot;discharge_location&quot;, &quot;insurance&quot;, &quot;language&quot;, &quot;marital_status&quot;, &quot;ethnicity&quot;, &quot;edregtime&quot;, &quot;edouttime&quot;, &quot;hospital_expire_flag&quot;
+## FROM (SELECT &quot;LHS&quot;.&quot;subject_id&quot; AS &quot;subject_id&quot;, &quot;hadm_id&quot;, &quot;stay_id&quot;, &quot;first_careunit&quot;, &quot;last_careunit&quot;, &quot;intime&quot;, &quot;outtime&quot;, &quot;los&quot;, &quot;gender&quot;, &quot;anchor_age&quot;, &quot;anchor_year&quot;, &quot;anchor_year_group&quot;, &quot;dod&quot;
+## FROM (SELECT &quot;subject_id&quot;, &quot;hadm_id&quot;, &quot;stay_id&quot;, &quot;first_careunit&quot;, &quot;last_careunit&quot;, &quot;intime&quot;, &quot;outtime&quot;, &quot;los&quot;
+## FROM (SELECT &quot;subject_id&quot;, &quot;hadm_id&quot;, &quot;stay_id&quot;, &quot;first_careunit&quot;, &quot;last_careunit&quot;, &quot;intime&quot;, &quot;outtime&quot;, &quot;los&quot;, RANK() OVER (PARTITION BY &quot;subject_id&quot; ORDER BY &quot;intime&quot;) AS &quot;q01&quot;
+## FROM &quot;mimic_icu&quot;.&quot;icustays&quot;) &quot;q01&quot;
+## WHERE (&quot;q01&quot; = 1.0)) &quot;LHS&quot;
+## LEFT JOIN &quot;mimic_core&quot;.&quot;patients&quot; AS &quot;RHS&quot;
+## ON (&quot;LHS&quot;.&quot;subject_id&quot; = &quot;RHS&quot;.&quot;subject_id&quot;)
+## ) &quot;LHS&quot;
+## LEFT JOIN &quot;mimic_core&quot;.&quot;admissions&quot; AS &quot;RHS&quot;
+## ON (&quot;LHS&quot;.&quot;subject_id&quot; = &quot;RHS&quot;.&quot;subject_id&quot; AND &quot;LHS&quot;.&quot;hadm_id&quot; = &quot;RHS&quot;.&quot;hadm_id&quot;)
+## ) &quot;LHS&quot;
+## LEFT JOIN &quot;public&quot;.&quot;mimic_labevents_icu&quot; AS &quot;RHS&quot;
+## ON (&quot;LHS&quot;.&quot;subject_id&quot; = &quot;RHS&quot;.&quot;subject_id&quot; AND &quot;LHS&quot;.&quot;hadm_id&quot; = &quot;RHS&quot;.&quot;hadm_id&quot;)
+## ) &quot;LHS&quot;
+## LEFT JOIN &quot;public&quot;.&quot;mimic_chartevents_icu&quot; AS &quot;RHS&quot;
+## ON (&quot;LHS&quot;.&quot;subject_id&quot; = &quot;RHS&quot;.&quot;subject_id&quot; AND &quot;LHS&quot;.&quot;hadm_id&quot; = &quot;RHS&quot;.&quot;hadm_id&quot; AND &quot;LHS&quot;.&quot;stay_id&quot; = &quot;RHS&quot;.&quot;stay_id&quot;)
+## ) &quot;q01&quot;) &quot;q02&quot;
+## WHERE (&quot;age_at_adm&quot; &gt;= 18.0)</code></pre>
 <p>Close database connection and clear workspace.</p>
 <pre class="r"><code>dbDisconnect(con)</code></pre>
 <pre><code>## [1] TRUE</code></pre>

@@ -111,7 +111,7 @@ admissions_tble <- tbl(con, Id(schema = "mimic_core", table = "admissions")) %>%
 
 6. Connect to the `mimic_labevents_icu` table.
 ```{r}
-labevents_tble <- tbl(con, Id(schema = "mimic_hosp", table = "labevents")) %>%
+labevents_tble <- tbl(con, Id(schema = "public", table = "mimic_labevents_icu")) %>%
   print(width = Inf)
 ```
 
@@ -131,42 +131,27 @@ if (!dir.exists("mimiciv_shiny")) {
 }
 ```
 
-```{r, eval=FALSE}
-icustays_tble %>% 
+```{r}
+icustays_tble %>%
+  # Find first ICU stay of each unique patient
   group_by(subject_id) %>%
   filter(rank(intime) == 1) %>%
   ungroup() %>%
-  left_join(admissions_tble, by = c("subject_id", "hadm_id"), copy = TRUE) %>%
-  left_join(patients_tble, by = "subject_id", copy = TRUE) %>%
+  # Left join the tables
+  left_join(patients_tble, by = c("subject_id")) %>%
+  left_join(admissions_tble, by = c("subject_id", "hadm_id")) %>%
+  left_join(labevents_tble, by = c("subject_id", "hadm_id")) %>%
+  left_join(chartevents_tble, by = c("subject_id", "hadm_id", "stay_id")) %>%
+  # Keep the adults
   mutate(age_at_adm = year(admittime) - anchor_year + anchor_age) %>%
-  filter(age_at_adm > 18) %>%
-  print(width = Inf)
-
-# icustays_tble %>%
-#   # Find first ICU stay of each unique patient
-#   group_by(subject_id) %>% 
-#   filter(rank(intime) == 1) %>% 
-#   ungroup() %>% 
-#   # Left join admissions & patients tables
-#   left_join(patients_tble, by = c("subject_id")) %>%
-#   left_join(admissions_tble, by = c("subject_id", "hadm_id")) %>%
-#   # Select for the adults 
-#   mutate(age_at_adm = year(admittime) - anchor_year + anchor_age) %>%
-#   filter(age_at_adm >= 18) %>%
-#   # merge in the labevents and chartevents tables
-#   left_join(labevents_tble, by = c("subject_id", "hadm_id")) %>%
-#   left_join(chartevents_tble, by = c("subject_id", "hadm_id")) %>%
-#   # display the SQL query
-#   show_query() %>%
-#   # collect SQL query result into memory as a tibble
-#   collect() %>% 
-#   # create an indicator for 30-day mortality
-#   mutate(death_30 = ifelse((deathtime - admittime)/(60*24) <= 30,
-#                            "Yes", "No")) %>%
-#   mutate_at(vars(death_30), 
-#             function(x){ifelse(is.na(x) == TRUE, "No", x)}) %>%
-#   # save the final tibble
-#   saveRDS(file = "./mimiciv_shiny/icu_cohort.rds")
+  filter(age_at_adm >= 18) %>%
+  # Display & collect the SQL query
+  show_query() %>%
+  collect() %>%
+  # Create an indicator for 30-day mortality
+  mutate(deathin30 = ifelse(deathtime - admittime <= 43200, "Yes", "No")) %>%
+  # Save the final tibble
+  saveRDS(str_c("./mimiciv_shiny/icu_cohort.rds"))
 ```
 
 
