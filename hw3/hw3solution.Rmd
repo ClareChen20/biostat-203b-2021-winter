@@ -133,24 +133,26 @@ if (!dir.exists("mimiciv_shiny")) {
 
 ```{r}
 icustays_tble %>%
-  # Find first ICU stay of each unique patient
+  # 1. Find first ICU stay of each unique patient
   group_by(subject_id) %>%
   filter(rank(intime) == 1) %>%
   ungroup() %>%
-  # Left join the tables
+  # 2. Left join the patients & admissions
   left_join(patients_tble, by = c("subject_id")) %>%
   left_join(admissions_tble, by = c("subject_id", "hadm_id")) %>%
-  left_join(labevents_tble, by = c("subject_id", "hadm_id")) %>%
-  left_join(chartevents_tble, by = c("subject_id", "hadm_id", "stay_id")) %>%
-  # Keep the adults
+  # 3. Keep the adults
   mutate(age_at_adm = year(admittime) - anchor_year + anchor_age) %>%
   filter(age_at_adm >= 18) %>%
-  # Display & collect the SQL query
+  # 4. Left join the labevents & chartevents
+  left_join(labevents_tble, by = c("subject_id", "hadm_id")) %>%
+  left_join(chartevents_tble, by = c("subject_id", "hadm_id", "stay_id")) %>%
+  # 5. Display the SQL query
   show_query() %>%
+  # 6. Collect the query
   collect() %>%
-  # Create an indicator for 30-day mortality
+  # 7. Create an indicator for 30-day mortality
   mutate(deathin30 = ifelse(deathtime - admittime <= 43200, "Yes", "No")) %>%
-  # Save the final tibble
+  # 8. Save the file tibble
   saveRDS(str_c("./mimiciv_shiny/icu_cohort.rds"))
 ```
 
