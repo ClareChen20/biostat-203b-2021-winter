@@ -3,148 +3,161 @@ library(shiny)
 library(tidyverse)
 library(ggplot2)
 
+
 # Load data ----
-#df <- readRDS("./hw3/mimiciv_shiny/data/icu_cohort.rds")
+# df <- readRDS("/home/mia.chen1998/biostat-203b-2021-winter/hw3/mimiciv_shiny/data/icu_cohort.rds")
 
 ui <- fluidPage(
-  titlePanel("Data Explorer"),
   
-  sidebarLayout(
-    sidebarPanel(
-      helpText("Visualize single continuous variables by boxplot"),
-      
-      selectInput("by_var", 
-                  label = "Choose the continuous variable of interest",
-                  choices = c("Bicarbonate", "Calcium", "Chloride"),
-                  selected = "Calcium"),
-      
-      selectInput ("con_var",
-                   label = "Show the boxplot by subgroups",
-                   choices = c("Admission Type", "First Careunit", 
-                               "Anchor Year Group", "Last Careunit"),
-                   selected = "Admission Type")
-    ),
-    
-    mainPanel(plotOutput("plot1"),
-              plotOutput("plot2"))
+  tabsetPanel(
+  
+    tabPanel("Demographic Data & Registered Information",
+        sidebarLayout(
+            sidebarPanel(
+                helpText("Select the categorical variable of interest"),
+             
+                selectInput ("demo_var",
+                      label = "Show the distribution of our sample
+                          by the chosen demographic catagory",
+                      choices = c( "gender", "anchor_age", "anchor_year",
+                                       "insurance", "language",
+                                       "marital_status", "ethnicity"),
+                      selected = "ethnicity"),
+             
+                selectInput ("reg_var",
+                      label = "Registered Information",
+                      choices = c( "first_careunit", "last_careunit",
+                                       "admission_type","admission_location",
+                                       "age_at_adm", "admittime", "dischtime",
+                                       "intime", "outtime", "deathtime", 
+                                       "discharge_location",
+                                       "edregtime", "edouttime"),
+                      selected = "first_careunit"),
+             ),
+            mainPanel(plotOutput("plot2"))
+       )
   ),
   
-  sidebarLayout(
-    sidebarPanel(
-      helpText("Visualize single Discrete variables by barcharts"),
-      
-      selectInput ("con_var",
-                   label = "Show the boxplot by subgroups",
-                   choices = c("Admission Type", "First Careunit", 
-                               "Anchor Year Group", "Last Careunit"),
-                   selected = "Admission Type"),
-     ),
-    
-    mainPanel(plotOutput("plot3"))
-   ),
-  
-  sidebarLayout(
-    sidebarPanel(
-      helpText("Visualize the relationship between two variables"),
-      
-      selectInput("by_var", 
-                  label = "Choose the first continuous variable of interest",
-                  choices = c("Bicarbonate", "Calcium", "Chloride"),
-                  selected = "Calcium"),
-      
-      selectInput("stat_var", 
-                  label = "Choose the second variable of interest",
-                  choices = c("Bicarbonate", "Calcium", "Chloride"),
-                  selected = "Chloride"),
-      
-      selectInput ("con_var",
-                   label = "Choose the catagorical variable of interest",
-                   choices = c("Admission Type", "First Careunit", 
-                               "Anchor Year Group", "Last Careunit"),
-                   selected = "Admission Type")
-    ),
-    
-    mainPanel(
-              plotOutput("plot4"),
-              plotOutput("plot5"))
+    tabPanel("Data Explorer for Clinical Measurement",
+        sidebarLayout(
+              sidebarPanel(
+               # Choose the type of plots you want
+              radioButtons("type", "Plot type:",
+                            c("Histogram" = "Hist",
+                              "Boxplot" = "Box"
+                              )),
+               
+               # Choose the numerical input
+              selectInput("by_var",
+                        label = "Lab Value",
+                        choices = c( "bicarbonate", "chloride", "creatinine", 
+                                        "glucose", "magnesium", "potassium", 
+                                        "sodium", "hematocrit", "wbc", 
+                                        "lactate", "heart_rate", "calcium",
+                                        "non_invasive_blood_pressure_systolic",
+                                        "non_invasive_blood_pressure_mean",
+                                        "respiratory_rate",
+                                        "temperature_fahrenheit",
+                                        "arterial_blood_pressure_systolic",
+                                        "arterial_blood_pressure_mean"),
+                        selected = "bicarbonate")),
+             # Output 
+          mainPanel(
+               # Output: Tabset w/ plot, summary, and table ----
+               tabsetPanel(type = "tabs",
+                           tabPanel("Plot", plotOutput("plot")),
+                           tabPanel("Summary", verbatimTextOutput("summary")),
+                           tabPanel("Table", tableOutput("table"))
+               )
+             )
+           )
+         )
   )
 )
 
+# Define server logic 
 server <- function(input, output) {
   
-  output$plot1 <- renderPlot({
-    by_var <- switch(input$by_var, 
-                     "Bicarbonate" = df$bicarbonate,
-                     "Calcium" = df$calcium, 
-                     "Chloride" = df$chloride)
-    
-    ggplot(data=df,aes(x = by_var))+
-      geom_boxplot()+
-      theme_bw()
-  })
-  
   output$plot2 <- renderPlot({
-    by_var <- switch(input$by_var, 
-                     "Bicarbonate" = df$bicarbonate,
-                     "Calcium" = df$calcium, 
-                     "Chloride" = df$chloride)
+
+    demo_var <- switch(input$demo_var, 
+                       "gender" = df$gender, 
+                       "anchor_age" = df$anchor_age, 
+                       "anchor_year" = df$anchor_year,
+                       "insurance" = df$insurance, 
+                       "language" = df$language,
+                       "marital_status" = df$language, 
+                       "ethnicity" = df$ethnicity)
     
-    con_var <- switch(input$con_var, 
-                      "Admission Type" = df$admission_type,
-                      "First Careunit" = df$first_careunit, 
-                      "Last Careunit" = df$last_careunit,
-                      "Anchor Year Group" = df$anchor_year_group)
-    
-    ggplot(data=df,aes(y=by_var,x=con_var, color=con_var))+
-      geom_boxplot()+
-      theme_bw()+
-      coord_flip()
-  })
-  
-  output$plot3 <- renderPlot({
-    
-    con_var <- switch(input$con_var, 
-                      "Admission Type" = df$admission_type,
-                      "First Careunit" = df$first_careunit, 
-                      "Last Careunit" = df$last_careunit,
-                      "Anchor Year Group" = df$anchor_year_group)
+    reg_var <- switch(input$reg_var,
+                      "first_careunit" = df$first_careunit,
+                      "last_careunit" = df$last_careunit,
+                      "admission_type" = df$admission_type,
+                      "admission_location" = df$admission_location,
+                      "age_at_adm" = df$age_at_adm, 
+                      "admittime" = df$admittime, 
+                      "dischtime" = df$dischtime,
+                      "intime" = df$intime, 
+                      "outtime" = df$outtime, 
+                      "deathtime" = df$deathtime, 
+                      "discharge_location" = df$discharge_location,
+                      "edregtime" = df$edregtime, 
+                      "edouttime" = df$edouttime)
     
     ggplot(data = df) + 
-      geom_bar(mapping = aes(x = con_var, fill = con_var))
+      geom_bar(mapping = aes(x = demo_var, fill = reg_var)) +
+      scale_x_discrete(guide = guide_axis(n.dodge=3))
   })
   
-  output$plot4 <- renderPlot({
-    by_var <- switch(input$by_var, 
-                       "Bicarbonate" = df$bicarbonate,
-                       "Calcium" = df$calcium, 
-                       "Chloride" = df$chloride)
+  output$plot <- renderPlot({
     
-    stat_var <- switch(input$stat_var, 
-                       "Bicarbonate" = df$bicarbonate,
-                       "Calcium" = df$calcium, 
-                       "Chloride" = df$chloride)
-
-    ggplot(data=df, aes(x=stat_var,y=by_var))+
-      geom_count()+
-      theme_bw()
+    by_var <- switch(input$by_var, 
+                     "bicarbonate" = df$bicarbonate, 
+                     "calcium" = df$calcium,
+                     "chloride" = df$chloride, 
+                     "creatinine" = df$creatinine,
+                     "glucose" = df$glucose, 
+                     "magnesium" = df$magnesium, 
+                     "potassium" = df$potassium, 
+                     "sodium" = df$sodium, 
+                     "hematocrit" = df$hematocrit, 
+                     "wbc" = df$wbc,
+                     "lactate" = df$lactate, 
+                     "heart_rate" = df$heart_rate,
+                     "non_invasive_blood_pressure_systolic" = 
+                       df$non_invasive_blood_pressure_systolic,
+                     "non_invasive_blood_pressure_mean" = 
+                       df$arterial_blood_pressure_mean,
+                     "respiratory_rate" = df$respiratory_rate,
+                     "temperature_fahrenheit" = df$temperature_fahrenheit,
+                     "arterial_blood_pressure_systolic" = 
+                       df$arterial_blood_pressure_systolic,
+                     "arterial_blood_pressure_mean" = 
+                       df$arterial_blood_pressure_mean)
+    
+    if (input$type == "Box")
+    {ggplot(data = df,aes(x = by_var)) +
+        geom_bar(stat = "count") +
+        geom_text(stat = 'count', aes(label=..count..)) +
+        theme(axis.text.x = element_text(angle = 45, hjust = 1))
+    }
+    
+    else if (input$type == "Hist")
+    {ggplot(data = df,mapping = aes_string(x = by_var)) +
+        geom_bar(bin = 20, color = "lightblue") +
+        scale_x_discrete(guide = guide_axis(n.dodge=3))
+    }
+    
   })
   
-  output$plot5 <- renderPlot({
-    by_var <- switch(input$by_var, 
-                     "Bicarbonate" = df$bicarbonate,
-                     "Calcium" = df$calcium, 
-                     "Chloride" = df$chloride)
-    
-    con_var <- switch(input$con_var, 
-                      "Admission Type" = df$admission_type,
-                      "First Careunit" = df$first_careunit, 
-                      "Last Careunit" = df$last_careunit,
-                      "Anchor Year Group" = df$anchor_year_group)
-    
-    ggplot(data=df,aes(x=by_var,color=con_var))+
-      geom_density(bw=10,size=1)+
-      theme_bw()
+  # Generate a summary of the data
+  output$summary <- renderPrint({
+    summary(data())
   })
+  
+  # Generate an HTML table view of the data
+  output$table <- renderTable({ head( df, n = 10 )},  
+                            spacing = 'xs')  
 }
 
 shinyApp(ui = ui, server = server)
@@ -168,4 +181,3 @@ shinyApp(ui = ui, server = server)
 
 
 
-  
