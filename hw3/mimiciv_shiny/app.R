@@ -5,7 +5,7 @@ library(ggplot2)
 
 
 # Load data ----
-# df <- readRDS("/home/mia.chen1998/biostat-203b-2021-winter/hw3/mimiciv_shiny/data/icu_cohort.rds")
+df <- readRDS("/home/mia.chen1998/biostat-203b-2021-winter/hw3/mimiciv_shiny/data/icu_cohort.rds")
 
 ui <- fluidPage(
   
@@ -137,17 +137,16 @@ server <- function(input, output) {
     
     if (input$type == "Box")
     {ggplot(data = df,aes(x = by_var)) +
-        geom_bar(stat = "count") +
-        geom_text(stat = 'count', aes(label=..count..)) +
-        theme(axis.text.x = element_text(angle = 45, hjust = 1))
+        geom_boxplot()+
+        theme_bw()
     }
     
     else if (input$type == "Hist")
-    {ggplot(data = df,mapping = aes_string(x = by_var)) +
-        geom_bar(bin = 20, color = "lightblue") +
-        scale_x_discrete(guide = guide_axis(n.dodge=3))
+    {ggplot(data = df,mapping = aes(x = by_var)) +
+        geom_bar(stat = 'count', color = "lightblue") +
+        geom_text(stat = 'count', aes(label=..count..)) +
+        theme(axis.text.x = element_text(angle = 90, hjust = 1))
     }
-    
   })
   
   # Generate a summary of the data
