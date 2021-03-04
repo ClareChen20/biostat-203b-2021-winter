@@ -152,8 +152,12 @@ icustays_tble %>%
   collect() %>%
   # 7. Create an indicator for 30-day mortality
   mutate(deathin30 = ifelse(deathtime - admittime <= 43200, "Yes", "No")) %>%
+    # We can choose to convert the missing values to "No",
+    # But I think it makes more sense not to since we would need to predict the 30-days mortaily rate later
+    # mutate_at(vars(deathin30), 
+    #        function(x){ifelse(is.na(x) == TRUE, "No", x)}) %>%
   # 8. Save the file tibble
-  saveRDS(str_c("./mimiciv_shiny/icu_cohort.rds"))
+  saveRDS(str_c("./mimiciv_shiny/data/icu_cohort.rds"))
 ```
 
 

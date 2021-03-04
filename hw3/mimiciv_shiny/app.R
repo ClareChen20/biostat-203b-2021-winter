@@ -10,8 +10,16 @@ df <- readRDS("/home/mia.chen1998/biostat-203b-2021-winter/hw3/mimiciv_shiny/dat
 ui <- fluidPage(
   
   tabsetPanel(
-  
+    
+    tabPanel("User's Guide",
+             titlePanel("Explore the icu_cohort.rds Dataset"),
+               mainPanel(htmlOutput("text"),
+                         verbatimTextOutput("sum1")
+               )
+             ),
+
     tabPanel("Demographic Data & Registered Information",
+             titlePanel("Demographic Data & Registered Information"),
         sidebarLayout(
             sidebarPanel(
                 helpText("Select the categorical variable of interest"),
@@ -19,26 +27,28 @@ ui <- fluidPage(
                 selectInput ("demo_var",
                       label = "Show the distribution of our sample
                           by the chosen demographic catagory",
-                      choices = c( "gender", "anchor_age", "anchor_year",
-                                       "insurance", "language",
-                                       "marital_status", "ethnicity"),
-                      selected = "ethnicity"),
+                      choices = c( "Gender", "Anchor age", "Anchor year",
+                                       "Insurance", "Language",
+                                       "Marital status", "Ethnicity"),
+                      selected = "Ethnicity"),
              
                 selectInput ("reg_var",
                       label = "Registered Information",
-                      choices = c( "first_careunit", "last_careunit",
-                                       "admission_type","admission_location",
-                                       "age_at_adm", "admittime", "dischtime",
-                                       "intime", "outtime", "deathtime", 
-                                       "discharge_location",
-                                       "edregtime", "edouttime"),
-                      selected = "first_careunit"),
+                      choices = c( "First careunit", "Last careunit",
+                                       "Admission type","Admission location",
+                                       "Age at adm", "Admittime", "Dischtime",
+                                       "Intime", "Outtime", "Deathtime", 
+                                       "Discharge location",
+                                       "Edregtime", "Edouttime"),
+                      selected = "Discharge location"),
              ),
-            mainPanel(plotOutput("plot2"))
+            mainPanel(htmlOutput("text1"),
+              plotOutput("plot2"))
        )
   ),
   
-    tabPanel("Data Explorer for Clinical Measurement",
+    tabPanel("Clinical Measurement",
+        titlePanel("Data Explorer for Clinical Measurement"),
         sidebarLayout(
               sidebarPanel(
                # Choose the type of plots you want
@@ -50,102 +60,172 @@ ui <- fluidPage(
                # Choose the numerical input
               selectInput("by_var",
                         label = "Lab Value",
-                        choices = c( "bicarbonate", "chloride", "creatinine", 
-                                        "glucose", "magnesium", "potassium", 
-                                        "sodium", "hematocrit", "wbc", 
-                                        "lactate", "heart_rate", "calcium",
-                                        "non_invasive_blood_pressure_systolic",
-                                        "non_invasive_blood_pressure_mean",
-                                        "respiratory_rate",
-                                        "temperature_fahrenheit",
-                                        "arterial_blood_pressure_systolic",
-                                        "arterial_blood_pressure_mean"),
-                        selected = "bicarbonate")),
-             # Output 
+                        choices = c( "Bicarbonate", "Chloride", "Creatinine", 
+                                        "Glucose", "Magnesium", "Potassium", 
+                                        "Sodium", "Hematocrit", "Wbc", 
+                                        "Lactate", "Heart rate", "Calcium",
+                                        "Non-invasive blood pressure systolic",
+                                        "Non-invasive blood pressure mean",
+                                        "Respiratory rate",
+                                        "Temperature fahrenheit",
+                                        "Arterial blood pressure systolic",
+                                        "Arterial blood pressure mean"),
+                        selected = "Bicarbonate")),
+      
           mainPanel(
-               # Output: Tabset w/ plot, summary, and table ----
                tabsetPanel(type = "tabs",
-                           tabPanel("Plot", plotOutput("plot")),
-                           tabPanel("Summary", verbatimTextOutput("summary")),
-                           tabPanel("Table", tableOutput("table"))
+                           tabPanel("Plot", 
+                                    mainPanel(
+                                    plotOutput("plot"))
+                                    ),
+                           tabPanel("Missing Values", 
+                                    mainPanel(
+                                      htmlOutput("text2"),
+                                      verbatimTextOutput("summary")
+                           )),
+                           tabPanel("Death in 30 Days", mainPanel(
+                             htmlOutput("text3"),
+                             plotOutput("plot3")
+                           ))
+                           )
                )
              )
            )
          )
-  )
 )
+
 
 # Define server logic 
 server <- function(input, output) {
   
+  output$text <- renderUI({
+    str1 <- paste("This app is designed to interactively visualize MIMIC-IV database collected by MIT, 
+    which includes real hospital stays for patients admitted to a tertiary academic medical center in Boston, MA, USA. ")
+    
+    str2 <- paste("       ")
+    
+    str3 <- paste("All data used by this application are available through [MIMIC IV](https://mimic-iv.mit.edu/docs/datasets/).") 
+    
+    str4 <- paste("       ")
+    
+    str5 <- paste("The icu_cohort.rds is an edited version of a combined database, which included all the information for the first ICU stay of each unique adult patient.")
+    
+    str6 <- paste("       ")
+    
+    str7 <- paste("Also, an indicator of whether the patient was dead within 30 days has been created and appended into the dataset.")
+    
+    HTML(paste(str1, str2, str3, str4, str5, str6, str7, sep = '<br/>'))
+    
+  })
+  
+  output$sum1 <- renderPrint({
+    dataset <- df
+    summary(dataset)
+  })
+    
   output$plot2 <- renderPlot({
 
     demo_var <- switch(input$demo_var, 
-                       "gender" = df$gender, 
-                       "anchor_age" = df$anchor_age, 
-                       "anchor_year" = df$anchor_year,
-                       "insurance" = df$insurance, 
-                       "language" = df$language,
-                       "marital_status" = df$language, 
-                       "ethnicity" = df$ethnicity)
+                       "Gender" = df$gender, 
+                       "Anchor age" = df$anchor_age, 
+                       "Anchor year" = df$anchor_year,
+                       "Insurance" = df$insurance, 
+                       "Language" = df$language,
+                       "Marital status" = df$language, 
+                       "Ethnicity" = df$ethnicity)
     
     reg_var <- switch(input$reg_var,
-                      "first_careunit" = df$first_careunit,
-                      "last_careunit" = df$last_careunit,
-                      "admission_type" = df$admission_type,
-                      "admission_location" = df$admission_location,
-                      "age_at_adm" = df$age_at_adm, 
-                      "admittime" = df$admittime, 
-                      "dischtime" = df$dischtime,
-                      "intime" = df$intime, 
-                      "outtime" = df$outtime, 
-                      "deathtime" = df$deathtime, 
-                      "discharge_location" = df$discharge_location,
-                      "edregtime" = df$edregtime, 
-                      "edouttime" = df$edouttime)
+                      "First careunit" = df$first_careunit,
+                      "Last careunit" = df$last_careunit,
+                      "Admission type" = df$admission_type,
+                      "Admission location" = df$admission_location,
+                      "Age at adm" = df$age_at_adm, 
+                      "Admittime" = df$admittime, 
+                      "Dischtime" = df$dischtime,
+                      "Intime" = df$intime, 
+                      "Outtime" = df$outtime, 
+                      "Deathtime" = df$deathtime, 
+                      "Discharge location" = df$discharge_location,
+                      "Edregtime" = df$edregtime, 
+                      "Edouttime" = df$edouttime)
     
     ggplot(data = df) + 
       geom_bar(mapping = aes(x = demo_var, fill = reg_var)) +
-      scale_x_discrete(guide = guide_axis(n.dodge=3))
+      scale_x_discrete(guide = guide_axis(n.dodge=3)) +
+      xlab(input$demo_var) +
+      ylab("Counts")
+  })
+  
+  output$text1 <- renderUI({
+    demo_var <- switch(input$demo_var, 
+                       "Gender" = df$gender, 
+                       "Anchor age" = df$anchor_age, 
+                       "Anchor year" = df$anchor_year,
+                       "Insurance" = df$insurance, 
+                       "Language" = df$language,
+                       "Marital status" = df$language, 
+                       "Ethnicity" = df$ethnicity)
+    
+    reg_var <- switch(input$reg_var,
+                      "First careunit" = df$first_careunit,
+                      "Last careunit" = df$last_careunit,
+                      "Admission type" = df$admission_type,
+                      "Admission location" = df$admission_location,
+                      "Age at adm" = df$age_at_adm, 
+                      "Admittime" = df$admittime, 
+                      "Dischtime" = df$dischtime,
+                      "Intime" = df$intime, 
+                      "Outtime" = df$outtime, 
+                      "Deathtime" = df$deathtime, 
+                      "Discharge location" = df$discharge_location,
+                      "Edregtime" = df$edregtime, 
+                      "Edouttime" = df$edouttime)
+    
+    str1 <- as.character(sum(is.na(demo_var)))
+    str2 <- paste("Number of missing values of chosen demographic variable: ")
+    str3 <- as.character(sum(is.na(reg_var)))
+    str4 <- paste("Number of missing values of chosen registered variable: ")
+    HTML(paste(str2, str1, str4, str3, sep = '<br/>'))
   })
   
   output$plot <- renderPlot({
     
     by_var <- switch(input$by_var, 
-                     "bicarbonate" = df$bicarbonate, 
-                     "calcium" = df$calcium,
-                     "chloride" = df$chloride, 
-                     "creatinine" = df$creatinine,
-                     "glucose" = df$glucose, 
-                     "magnesium" = df$magnesium, 
-                     "potassium" = df$potassium, 
-                     "sodium" = df$sodium, 
-                     "hematocrit" = df$hematocrit, 
-                     "wbc" = df$wbc,
-                     "lactate" = df$lactate, 
-                     "heart_rate" = df$heart_rate,
-                     "non_invasive_blood_pressure_systolic" = 
+                     "Bicarbonate" = df$bicarbonate, 
+                     "Calcium" = df$calcium,
+                     "Chloride" = df$chloride, 
+                     "Creatinine" = df$creatinine,
+                     "Glucose" = df$glucose, 
+                     "Magnesium" = df$magnesium, 
+                     "Potassium" = df$potassium, 
+                     "Sodium" = df$sodium, 
+                     "Hematocrit" = df$hematocrit, 
+                     "Wbc" = df$wbc,
+                     "Lactate" = df$lactate, 
+                     "Heart rate" = df$heart_rate,
+                     "Non-invasive blood pressure systolic" = 
                        df$non_invasive_blood_pressure_systolic,
-                     "non_invasive_blood_pressure_mean" = 
+                     "Non-invasive blood pressure mean" = 
                        df$arterial_blood_pressure_mean,
-                     "respiratory_rate" = df$respiratory_rate,
-                     "temperature_fahrenheit" = df$temperature_fahrenheit,
-                     "arterial_blood_pressure_systolic" = 
+                     "Respiratory rate" = df$respiratory_rate,
+                     "Temperature fahrenheit" = df$temperature_fahrenheit,
+                     "Arterial blood pressure systolic" = 
                        df$arterial_blood_pressure_systolic,
-                     "arterial_blood_pressure_mean" = 
+                     "Arterial blood pressure mean" = 
                        df$arterial_blood_pressure_mean)
     
     if (input$type == "Box")
     {ggplot(data = df,aes(x = by_var)) +
-        geom_boxplot()+
-        theme_bw()
+        geom_boxplot(color = "lightblue")+
+        xlab(input$by_var)
     }
     
     else if (input$type == "Hist")
-    {ggplot(data = df,mapping = aes(x = by_var)) +
-        geom_bar(stat = 'count', color = "lightblue") +
-        geom_text(stat = 'count', aes(label=..count..)) +
-        theme(axis.text.x = element_text(angle = 90, hjust = 1))
+    { hist(by_var, main="Histogram of the chosen variable",
+           xlab = input$by_var, ylab = "Counts",
+           breaks = 15, col = 'lightblue', border = 'white',
+           labels = TRUE
+      )
     }
   })
   
@@ -155,8 +235,83 @@ server <- function(input, output) {
   })
   
   # Generate an HTML table view of the data
-  output$table <- renderTable({ head( df, n = 10 )},  
-                            spacing = 'xs')  
+  output$text2 <- renderUI({
+    by_var <- switch(input$by_var, 
+                     "Bicarbonate" = df$bicarbonate, 
+                     "Calcium" = df$calcium,
+                     "Chloride" = df$chloride, 
+                     "Creatinine" = df$creatinine,
+                     "Glucose" = df$glucose, 
+                     "Magnesium" = df$magnesium, 
+                     "Potassium" = df$potassium, 
+                     "Sodium" = df$sodium, 
+                     "Hematocrit" = df$hematocrit, 
+                     "Wbc" = df$wbc,
+                     "Lactate" = df$lactate, 
+                     "Heart rate" = df$heart_rate,
+                     "Non-invasive blood pressure systolic" = 
+                       df$non_invasive_blood_pressure_systolic,
+                     "Non-invasive blood pressure mean" = 
+                       df$arterial_blood_pressure_mean,
+                     "Respiratory rate" = df$respiratory_rate,
+                     "Temperature fahrenheit" = df$temperature_fahrenheit,
+                     "Arterial blood pressure systolic" = 
+                       df$arterial_blood_pressure_systolic,
+                     "Arterial blood pressure mean" = 
+                       df$arterial_blood_pressure_mean)
+    
+    str1 <- as.character(sum(is.na(by_var)))
+    str2 <- paste("Number of missing values of chosen variable: ")
+    HTML(paste(str2, str1, sep = '<br/>'))
+  })  
+  
+  output$text3 <- renderText(
+    {paste("The replationship between the chosen variable and the 30-day death indicator: ")})
+  
+  output$plot3 <- renderPlot({
+    
+    by_var <- switch(input$by_var, 
+                     "Bicarbonate" = df$bicarbonate, 
+                     "Calcium" = df$calcium,
+                     "Chloride" = df$chloride, 
+                     "Creatinine" = df$creatinine,
+                     "Glucose" = df$glucose, 
+                     "Magnesium" = df$magnesium, 
+                     "Potassium" = df$potassium, 
+                     "Sodium" = df$sodium, 
+                     "Hematocrit" = df$hematocrit, 
+                     "Wbc" = df$wbc,
+                     "Lactate" = df$lactate, 
+                     "Heart rate" = df$heart_rate,
+                     "Non-invasive blood pressure systolic" = 
+                       df$non_invasive_blood_pressure_systolic,
+                     "Non-invasive blood pressure mean" = 
+                       df$arterial_blood_pressure_mean,
+                     "Respiratory rate" = df$respiratory_rate,
+                     "Temperature fahrenheit" = df$temperature_fahrenheit,
+                     "Arterial blood pressure systolic" = 
+                       df$arterial_blood_pressure_systolic,
+                     "Arterial blood pressure mean" = 
+                       df$arterial_blood_pressure_mean)
+    
+    if (input$type == "Box")
+    {ggplot(df, aes(x = df$deathin30, y = by_var, group = df$deathin30)) + 
+        geom_boxplot(aes(fill = df$deathin30)) +
+          xlab("Whether the patient died in 30 days") +
+          ylab(input$by_var)
+    }
+    
+    else if (input$type == "Hist")
+    { ggplot(df, aes(x = by_var)) +
+        geom_histogram(aes(color = deathin30, fill = deathin30), 
+                       position = "identity", bins = 15, alpha = 0.3) +
+        ylim(0, 150) +
+        scale_color_manual(values = c("#00AFBB", "#E7B800")) +
+        scale_fill_manual(values = c("#00AFBB", "#E7B800")) 
+      }
+    
+  })
+  
 }
 
 shinyApp(ui = ui, server = server)
