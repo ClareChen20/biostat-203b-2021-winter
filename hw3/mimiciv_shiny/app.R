@@ -196,7 +196,7 @@ server <- function(input, output) {
     str3 <- as.character(sum(is.na(reg_var)))
     str4 <- paste("Number of missing values of chosen registered variable: ")
     str5 <- paste("            ")
-    HTML(paste(str2, str1, str5, str4, str3, sep = '<br/>'))
+    HTML(paste(str2, str1, str5, str4, str3, str5, sep = '<br/>'))
   })
   
   output$plot <- renderPlot({
