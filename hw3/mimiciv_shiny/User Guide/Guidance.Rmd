@@ -16,13 +16,6 @@ MIMIC-IV contains comprehensive information for each patient while they were in 
 The icu_cohort,rds is an edited version of a combined database, which included all the information for the first ICU stay of each unique adult patient. Also, an indicator of whether the patient was dead within 30 days has been created and appended into the dataset.
 
 ## Application usage
-The application has two main inputs: a map and a table. To build plots for any individual site, click on your desired site in either the map or the table.  
+The application has two main parts: the one for demographic and registration information and another one for the clinical variables. There is also a section to explore the relationship between those clinical variables and the 30-day death indicator. Hopefully these would be helpful.
 
-The map shows all sites with profile data available. The table shows all of those sites and their associated uses and assessments for each parameter.  
-
-The map and table inputs are responsive to eachother. When you click a site on the map, the table will automatically filter to assessments associated with that site.
-When you click on a row in the table, the map will automatically fly to that site location.  
-
-Plots specific to that site will be rendered automatically. Several data plotting and review options are available.
-Outputs will automatically render any time the user updates one of the input widgets.
 <br>
