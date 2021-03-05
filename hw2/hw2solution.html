@@ -1333,11 +1333,11 @@ for (labitem in labitems) {
 </li>
 <li>an indicator variable whether the patient died within 30 days of hospital admission</li>
 </ul>
-<pre class="r"><code>icustays_table %&gt;%
+<pre class="r"><code>icustays %&gt;%
   group_by(subject_id) %&gt;%
   filter(rank(intime) == 1) %&gt;%
   ungroup() %&gt;%
-  left_join(admission_table, by = c(&quot;subject_id&quot;, &quot;hadm_id&quot;)) %&gt;%
+  left_join(admission, by = c(&quot;subject_id&quot;, &quot;hadm_id&quot;)) %&gt;%
   left_join(patients, by = &quot;subject_id&quot;) %&gt;%
   mutate(age_at_adm = year(admittime) - anchor_year + anchor_age) %&gt;%
   filter(age_at_birth &gt; 18) %&gt;%

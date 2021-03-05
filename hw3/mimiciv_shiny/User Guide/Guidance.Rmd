@@ -1,0 +1,21 @@
+---
+title: "icu_cohort data analysis"
+author: "Siyan Chen"
+date: "Feb 28 2021"
+---
+
+## Introduction
+This app is designed to interactively visualize MIMIC-IV database collected by MIT, which includes real hospital stays for patients admitted to a tertiary academic medical center in Boston, MA, USA.   
+This application is available under an [MIT license](https://github.com/utah-dwq/LakeProfileDashboard/blob/master/LICENSE) .  
+<br>
+
+## Data
+All data used by this application are available through [MIMIC IV](https://mimic-iv.mit.edu/docs/datasets/) .
+MIMIC-IV contains comprehensive information for each patient while they were in the hospital: laboratory measurements, medications administered, vital signs documented, and so on. The database is intended to support a wide variety of research in healthcare. MIMIC-IV builds upon the success of MIMIC-III, and incorporates numerous improvements over MIMIC-III.
+
+The icu_cohort,rds is an edited version of a combined database, which included all the information for the first ICU stay of each unique adult patient. Also, an indicator of whether the patient was dead within 30 days has been created and appended into the dataset.
+
+## Application usage
+The application has two main parts: the one for demographic and registration information and another one for the clinical variables. There is also a section to explore the relationship between those clinical variables and the 30-day death indicator. Hopefully these would be helpful.
+
+<br>
