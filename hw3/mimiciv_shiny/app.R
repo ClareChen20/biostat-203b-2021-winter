@@ -30,14 +30,14 @@ ui <- fluidPage(
                 selectInput ("demo_var",
                       label = "Show the distribution of our sample
                           by the chosen demographic catagory",
-                      choices = c( "Gender", "Anchor age", "Anchor year",
+                      choices = c("Gender", "Anchor age", "Anchor year",
                                        "Insurance", "Language",
                                        "Marital status", "Ethnicity"),
                       selected = "Ethnicity"),
              
                 selectInput ("reg_var",
                       label = "Registered Information",
-                      choices = c( "First careunit", "Last careunit",
+                      choices = c("First careunit", "Last careunit",
                                        "Admission type","Admission location",
                                        "Age at adm", "Admittime", "Dischtime",
                                        "Intime", "Outtime", "Deathtime", 
@@ -195,7 +195,8 @@ server <- function(input, output) {
     str2 <- paste("Number of missing values of chosen demographic variable: ")
     str3 <- as.character(sum(is.na(reg_var)))
     str4 <- paste("Number of missing values of chosen registered variable: ")
-    HTML(paste(str2, str1, str4, str3, sep = '<br/>'))
+    str5 <- paste("            ")
+    HTML(paste(str2, str1, str5, str4, str3, sep = '<br/>'))
   })
   
   output$plot <- renderPlot({
