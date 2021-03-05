@@ -7,23 +7,26 @@ library(ggplot2)
 # Load data ----
 df <- readRDS("/home/mia.chen1998/biostat-203b-2021-winter/hw3/mimiciv_shiny/data/icu_cohort.rds")
 
+# The ui function ----
 ui <- fluidPage(
   
   tabsetPanel(
     
+    # First Panel: Introduction and Summary of data ----
     tabPanel("User's Guide",
              titlePanel("Explore the icu_cohort.rds Dataset"),
                mainPanel(htmlOutput("text"),
                          verbatimTextOutput("sum1")
                )
              ),
-
-    tabPanel("Demographic Data & Registered Information",
-             titlePanel("Demographic Data & Registered Information"),
+    
+    # Second Panel: Demographic Data & Registered Information
+    tabPanel("Demographic & Registration",
+             titlePanel("Demographic Data & Registration Information"),
         sidebarLayout(
             sidebarPanel(
                 helpText("Select the categorical variable of interest"),
-             
+                
                 selectInput ("demo_var",
                       label = "Show the distribution of our sample
                           by the chosen demographic catagory",
@@ -46,11 +49,13 @@ ui <- fluidPage(
               plotOutput("plot2"))
        )
   ),
-  
+    
+    # Third Panel: Clinical variable with interests ----
     tabPanel("Clinical Measurement",
         titlePanel("Data Explorer for Clinical Measurement"),
         sidebarLayout(
               sidebarPanel(
+                
                # Choose the type of plots you want
               radioButtons("type", "Plot type:",
                             c("Histogram" = "Hist",
@@ -72,20 +77,23 @@ ui <- fluidPage(
                                         "Arterial blood pressure mean"),
                         selected = "Bicarbonate")),
       
-          mainPanel(
-               tabsetPanel(type = "tabs",
+               mainPanel(
+                 # Create sub-tabs within this tab for different functions ----
+                 tabsetPanel(type = "tabs",
                            tabPanel("Plot", 
                                     mainPanel(
-                                    plotOutput("plot"))
+                                      htmlOutput("text4"),
+                                      plotOutput("plot"))
                                     ),
                            tabPanel("Missing Values", 
                                     mainPanel(
                                       htmlOutput("text2"),
                                       verbatimTextOutput("summary")
                            )),
-                           tabPanel("Death in 30 Days", mainPanel(
-                             htmlOutput("text3"),
-                             plotOutput("plot3")
+                           tabPanel("Death in 30 Days", 
+                                    mainPanel(
+                                      htmlOutput("text3"),
+                                      plotOutput("plot3")
                            ))
                            )
                )
@@ -95,7 +103,7 @@ ui <- fluidPage(
 )
 
 
-# Define server logic 
+# Define server logic ----
 server <- function(input, output) {
   
   output$text <- renderUI({
@@ -114,7 +122,9 @@ server <- function(input, output) {
     
     str7 <- paste("Also, an indicator of whether the patient was dead within 30 days has been created and appended into the dataset.")
     
-    HTML(paste(str1, str2, str3, str4, str5, str6, str7, sep = '<br/>'))
+    str8 <- paste("       ")
+    
+    HTML(paste(str1, str2, str3, str4, str5, str6, str7, str8, sep = '<br/>'))
     
   })
   
@@ -312,8 +322,15 @@ server <- function(input, output) {
     
   })
   
+  output$text4 <- renderText(
+    {paste("Essentially, we are interested in any possible correlation between the clinical measurement
+           and the 30-day death indicator. So in section, apart from exploring each variable, I also
+           created the histograms and bloxplots for each variable within each subgroup that did/did not 
+           die in 30 days.")})
+  
 }
 
+# Call the application ----
 shinyApp(ui = ui, server = server)
 
 
