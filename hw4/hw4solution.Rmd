@@ -1,0 +1,131 @@
+---
+title: "Biostat 203B Homework 4 (Draft)"
+subtitle: Due Mar 12 @ 11:59PM
+output:
+  # ioslides_presentation: default
+  html_document:
+    toc: true
+    toc_depth: 4
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(echo = TRUE, cache = TRUE)
+```
+                      
+Display machine information:
+```{r}
+sessionInfo()
+```
+Load database libraries and the tidyverse frontend:
+```{r}
+library(tidyverse)
+library(lubridate)
+library(miceRanger)
+```
+
+## Q1. Missing data
+
+Through the Shiny app developed in HW3, we observe abundant missing values in the MIMIC-IV ICU cohort we created. In this question, we use multiple imputation to obtain a data set without missing values.
+
+0. Read following tutorials on the R package miceRanger for imputation: <https://github.com/farrellday/miceRanger>, <https://cran.r-project.org/web/packages/miceRanger/vignettes/miceAlgorithm.html>.
+
+    A more thorough book treatment of the practical imputation strategies is the book [*_Flexible Imputation of Missing Data_*](https://stefvanbuuren.name/fimd/) by Stef van Buuren. 
+    
+**Solution:** Done
+
+1. Explain the jargon MCAR, MAR, and MNAR.
+
+**Solution:** 
+
+MCAR:  data are missing completely at random. i.e. the probability of being missing is the same for all case.
+
+MAR: data are missing at random. i.e. the probability of being missing is the same only within groups defined by the observed data.
+
+MNAR: data are not missing at random. i.e. the probability of being missing varies for reasons that are unknown to us.
+
+2. Explain in a couple of sentences how the Multiple Imputation by Chained Equations (MICE) work.
+
+**Solution:** 
+
+Multiple Imputation by Chained Equations (MICE): it is an effective way to deal with missing data in the dataset. The term 'imputation' means filling the missing data in a dataset through an iterative series of predictive models. At each iteration, the missing values are predicted by the other non-missing data in the dataset. The iteration will stop when convergence has met. 
+
+3. Perform a data quality check of the ICU stays data. Discard variables with substantial missingness, say >5000 `NA`s. Replace apparent data entry errors by `NA`s.
+
+```{r}
+library(dplyr)
+library(data.table)
+# Read data
+df <- readRDS("/home/mia.chen1998/biostat-203b-2021-winter/hw3/mimiciv_shiny/data/icu_cohort.rds")
+
+# Delete Columns with more than 5000 missing values
+sapply(df, function(x) sum(is.na(x)))
+```
+
+```{r}
+# Choose all the numeric variables with <5000 missing values
+selected_cols = c('bicarbonate', 'calcium', 'chloride', 'creatinine', 
+                  'glucose', 'magnesium', 'potassium, sodium', 'hematocrit', 
+                  'wbc', 'heart_rate', 'respiratory_rate', 
+                  'non_invasive_blood_pressure_systolic', 
+                  'non_invasive_blood_pressure_mean', 
+                  'temperature_fahrenheit')
+
+icu_tble <- setDT(df[ , names(df) %in% selected_cols])
+head(icu_tble, 10)
+
+```
+
+4. Impute missing values by `miceRanger` (request $m=3$ datasets). This step is very computational intensive. Make sure to save the imputation results as a file.
+
+```{r, eval = FALSE}
+require(miceRanger)
+seqTime <- system.time(
+  miceObj <- miceRanger(
+    icu_tble
+    , m = 3
+    , max.depth = 5
+    , returnModels = TRUE
+    , verbose = TRUE
+  )
+)
+miceObj %>% 
+  saveRDS(str_c("/home/mia.chen1998/biostat-203b-2021-winter/hw4/Obj.rds"))
+```
+
+5. Make imputation diagnostic plots and explain what they mean.
+
+```{r}
+Obj = readRDS("/home/mia.chen1998/biostat-203b-2021-winter/hw4/Obj.rds")
+
+# Distribution of Imputed Values
+plotDistributions(Obj, vars = 'allNumeric')
+# Convergence of Correlation
+plotCorrelations(Obj,vars='allNumeric')
+# Center and Dispersion Convergence
+plotVarConvergence(Obj,vars='allNumeric')
+# Model OOB Error
+plotModelError(Obj,vars='allNumeric')
+# Variable Importance
+plotVarImportance(Obj)
+# Imputed Variance Between Datasets
+plotImputationVariance(Obj,ncol=2,widths=c(5,3))
+
+```
+
+6. Obtain a complete data set by averaging the 3 imputed data sets.
+
+```{r}
+dataList <- completeData(Obj)
+head(dataList[[1]],10)
+```
+
+
+## Q2. Predicting 30-day mortality
+
+Develop at least two analytic approaches for predicting the 30-day mortality of patients admitted to ICU using demographic information (gender, age, marital status, ethnicity), first lab measurements during ICU stay, and first vital measurements during ICU stay. For example, you can use (1) logistic regression (`glm()` function), (2) logistic regression with lasso penalty (glmnet package), (3) random forest (randomForest package), or (4) neural network.
+
+1. Partition data into 80% training set and 20% test set. Stratify partitioning according the 30-day mortality status.
+
+2. Train the models using the training set.
+
+3. Compare model prediction performance on the test set.
