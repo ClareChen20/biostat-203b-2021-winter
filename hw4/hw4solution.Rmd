@@ -63,9 +63,10 @@ sapply(df, function(x) sum(is.na(x)))
 
 ```{r}
 # Choose all the numeric variables with <5000 missing values
-selected_cols = c('bicarbonate', 'calcium', 'chloride', 'creatinine', 
-                  'glucose', 'magnesium', 'potassium, sodium', 'hematocrit', 
-                  'wbc', 'heart_rate', 'respiratory_rate', 
+selected_cols = c('bicarbonate', 'calcium', 'chloride',
+                  'creatinine','glucose','magnesium',
+                  'potassium,sodium', 'hematocrit', 'wbc',
+                  'heart_rate', 'respiratory_rate', 
                   'non_invasive_blood_pressure_systolic', 
                   'non_invasive_blood_pressure_mean', 
                   'temperature_fahrenheit')
@@ -96,20 +97,43 @@ miceObj %>%
 
 ```{r}
 Obj = readRDS("/home/mia.chen1998/biostat-203b-2021-winter/hw4/Obj.rds")
+```
 
+First we can check the plot of distribution for the original dataset (in red) with the imputed dataset (in black). As we can see most of them matched well. Unmatchness might arise for heart rate and respiratory rate with the lines slightly unmatched. It would not cause a big problem but just telling us these two variables were not missing completely at random.
+```{r}
 # Distribution of Imputed Values
 plotDistributions(Obj, vars = 'allNumeric')
+```
+
+These plots will show us how values between datasets converged over the iterations. 
+
+```{r}
 # Convergence of Correlation
 plotCorrelations(Obj,vars='allNumeric')
+```
+
+These plots are helping us check if there is any convergence issue. The convergence issue arise when the missing data locations are correlated with higher or lower values.
+```{r}
 # Center and Dispersion Convergence
 plotVarConvergence(Obj,vars='allNumeric')
+```
+
+For the OOB command, each model returns the OOB accuracy for classification, and r-squared for regression. For our dataset, we may need to worry about the accuracy for chloride and glucose. We can possibly solve the problem by adding more iterations.
+```{r}
 # Model OOB Error
 plotModelError(Obj,vars='allNumeric')
+```
+
+In this plot, the top axis contains the variable that was used to impute the variable on the left axis.
+```{r}
 # Variable Importance
 plotVarImportance(Obj)
+```
+
+Finally we can check the the variance experienced for each imputed value between the datasets by the following commands.
+```{r}
 # Imputed Variance Between Datasets
 plotImputationVariance(Obj,ncol=2,widths=c(5,3))
-
 ```
 
 6. Obtain a complete data set by averaging the 3 imputed data sets.
