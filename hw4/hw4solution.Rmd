@@ -1,0 +1,330 @@
+---
+title: "Biostat 203B Homework 4 (Draft)"
+subtitle: Due Mar 12 @ 11:59PM
+output:
+  # ioslides_presentation: default
+  html_document:
+    toc: true
+    toc_depth: 4
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(echo = TRUE, cache = TRUE)
+```
+                      
+Display machine information:
+```{r}
+sessionInfo()
+```
+Load database libraries and the tidyverse frontend:
+```{r}
+setwd("/home/mia.chen1998/biostat-203b-2021-winter/hw4")
+library(tidyverse)
+library(lubridate)
+library(miceRanger)
+library(dplyr)
+library(data.table)
+```
+
+## Q1. Missing data
+
+Through the Shiny app developed in HW3, we observe abundant missing values in the MIMIC-IV ICU cohort we created. In this question, we use multiple imputation to obtain a data set without missing values.
+
+0. Read following tutorials on the R package miceRanger for imputation: <https://github.com/farrellday/miceRanger>, <https://cran.r-project.org/web/packages/miceRanger/vignettes/miceAlgorithm.html>.
+
+    A more thorough book treatment of the practical imputation strategies is the book [*_Flexible Imputation of Missing Data_*](https://stefvanbuuren.name/fimd/) by Stef van Buuren. 
+    
+**Solution:** Done
+
+1. Explain the jargon MCAR, MAR, and MNAR.
+
+**Solution:** 
+
+MCAR:  data are missing completely at random. i.e. the probability of being missing is the same for all case.
+
+MAR: data are missing at random. i.e. the probability of being missing is the same only within groups defined by the observed data.
+
+MNAR: data are not missing at random. i.e. the probability of being missing varies for reasons that are unknown to us.
+
+2. Explain in a couple of sentences how the Multiple Imputation by Chained Equations (MICE) work.
+
+**Solution:** 
+
+Multiple Imputation by Chained Equations (MICE): it is an effective way to deal with missing data in the dataset. The term 'imputation' means filling the missing data in a dataset through an iterative series of predictive models. At each iteration, the missing values are predicted by the other non-missing data in the dataset. The iteration will stop when convergence has met. 
+
+3. Perform a data quality check of the ICU stays data. Discard variables with substantial missingness, say >5000 `NA`s. Replace apparent data entry errors by `NA`s.
+
+```{r}
+# Read data
+df <- readRDS("icu_cohort.rds")
+
+# Delete Columns with more than 5000 missing values
+sapply(df, function(x) sum(is.na(x)))
+```
+
+```{r, eval = FALSE}
+# Choose all the numeric variables with <5000 missing values
+selected_cols = c('bicarbonate', 'calcium', 'chloride',
+                  'creatinine','glucose','magnesium',
+                  'potassium,sodium', 'hematocrit', 'wbc',
+                  'heart_rate', 'respiratory_rate', 
+                  'non_invasive_blood_pressure_systolic', 
+                  'non_invasive_blood_pressure_mean', 
+                  'temperature_fahrenheit')
+
+icu_tble <- setDT(df[ , names(df) %in% selected_cols])
+head(icu_tble, 10)
+
+```
+
+4. Impute missing values by `miceRanger` (request $m=3$ datasets). This step is very computational intensive. Make sure to save the imputation results as a file.
+
+```{r, eval = FALSE}
+require(miceRanger)
+seqTime <- system.time(
+  miceObj <- miceRanger(
+    icu_tble
+    , m = 3
+    , max.depth = 5
+    , returnModels = TRUE
+    , verbose = TRUE
+  )
+)
+miceObj %>% 
+  saveRDS(str_c("/home/mia.chen1998/biostat-203b-2021-winter/hw4/Obj.rds"))
+```
+
+5. Make imputation diagnostic plots and explain what they mean.
+
+```{r}
+Obj = readRDS("Obj.rds")
+```
+
+First we can check the plot of distribution for the original dataset (in red) with the imputed dataset (in black). As we can see most of them matched well. Unmatchness might arise for heart rate and respiratory rate with the lines slightly unmatched. It would not cause a big problem but just telling us these two variables were not missing completely at random.
+```{r}
+# Distribution of Imputed Values
+plotDistributions(Obj, vars = 'allNumeric')
+```
+
+These plots will show us how values between datasets converged over the iterations. 
+
+```{r}
+# Convergence of Correlation
+plotCorrelations(Obj,vars='allNumeric')
+```
+
+These plots are helping us check if there is any convergence issue. The convergence issue arise when the missing data locations are correlated with higher or lower values.
+```{r}
+# Center and Dispersion Convergence
+plotVarConvergence(Obj,vars='allNumeric')
+```
+
+For the OOB command, each model returns the OOB accuracy for classification, and r-squared for regression. For our dataset, we may need to worry about the accuracy for chloride and glucose. We can possibly solve the problem by adding more iterations.
+```{r}
+# Model OOB Error
+plotModelError(Obj,vars='allNumeric')
+```
+
+In this plot, the top axis contains the variable that was used to impute the variable on the left axis.
+```{r}
+# Variable Importance
+plotVarImportance(Obj)
+```
+
+Finally we can check the the variance experienced for each imputed value between the datasets by the following commands.
+```{r}
+# Imputed Variance Between Datasets
+plotImputationVariance(Obj,ncol=2,widths=c(5,3))
+```
+
+6. Obtain a complete data set by averaging the 3 imputed data sets.
+
+```{r}
+dataList <- completeData(Obj)
+head(dataList[[1]],10)
+```
+
+
+## Q2. Predicting 30-day mortality
+
+Develop at least two analytic approaches for predicting the 30-day mortality of patients admitted to ICU using demographic information (gender, age, marital status, ethnicity), first lab measurements during ICU stay, and first vital measurements during ICU stay. For example, you can use (1) logistic regression (`glm()` function), (2) logistic regression with lasso penalty (glmnet package), (3) random forest (randomForest package), or (4) neural network.
+
+**Solution:**
+First we T=transform the data into the form we want, in particular, we make the 30-day mortality indicator numeric with no missing values
+```{r}
+
+icu_cohort <- readRDS("icu_cohort.rds") %>%
+  print(width = Inf)  %>%
+  mutate_at(vars(deathin30),
+            function(x){
+              ifelse(is.na(x) == TRUE, "No", x)
+              })
+deathin30 <- icu_cohort$deathin30
+  # %>%
+  # mutate_at(vars(deathin30),
+  #           function(x){
+  #             ifelse(x == "Yes", 1, 0)
+  #           }) %>%
+  # mutate_at(vars(deathin30),
+  #           function(x){
+  #             ifelse(is.na(x) == TRUE, 0, x)
+  #             })
+
+```
+
+Choose the columns with the categorical vars as required + the numerical vars with no more than 5000 missing values + subject_id + 30-day mortality indicator.
+```{r, eval = FALSE}
+selected_cols_2 = c('gender','anchor_age','marital_status','ethnicity',
+                  'bicarbonate', 'calcium', 'chloride',
+                  'creatinine','glucose','magnesium',
+                  'potassium','sodium', 'hematocrit', 'wbc',
+                  'heart_rate', 'respiratory_rate', 
+                  'non_invasive_blood_pressure_systolic', 
+                  'non_invasive_blood_pressure_mean', 
+                  'temperature_fahrenheit', 'deathin30')
+
+icu <- setDT(icu_cohort[ , names(df) %in% selected_cols_2])
+head(icu, 10)
+summary(icu)
+```
+
+Identify and remove the outliers
+```{r, eval = FALSE}
+library(tidyverse)
+columns_to_do <- names(select_if(icu, is.numeric))
+
+do_col <- function(c){
+b <- boxplot(c, plot = FALSE)
+s1 <- c
+s1[which(c %in% b$out)] = NA
+return(s1)
+}
+
+icu1 <- mutate_if(icu, is.numeric, do_col)
+```
+
+Impute the dataset with miceRanger:
+```{r, eval = FALSE}
+require(miceRanger)
+seqTime <- system.time(
+  miceObj <- miceRanger(
+    icu1
+    , m = 3
+    , max.depth = 10
+    , returnModels = TRUE
+    , verbose = TRUE
+  )
+)
+
+saveRDS(miceObj, file="icu_MICE.rds")
+```
+
+Read in the imputed datasets and take the average:
+```{r}
+Obj1 <- readRDS("icu_MICE.rds")
+ICU <- completeData(Obj1)
+dummy <- c('gender', 'marital_status')
+d <- as.data.frame(ICU$Dataset_1)
+d1 <- data.matrix(ICU$Dataset_1)
+d2 <- data.matrix(ICU$Dataset_2)
+d3 <- data.matrix(ICU$Dataset_3)
+d4 <- as.data.frame((d1 + d2 + d3)/3)
+d4$gender <- as.numeric(as.factor(d$gender))
+d4$marital_status <- as.numeric(as.factor(d$marital_status))
+d4$ethnicity <- as.numeric(as.factor(d$ethnicity))
+d4$deathin30 <- icu_cohort$deathin30
+# d4 is the dataframe we going to use eventually
+is.data.frame(d4)
+summary(d4)
+```
+
+Now we can use the imputed dataset to predict the 30-day mortality status.
+
+**Solution:** Method 1: Random Forest
+
+Load the required packages.
+```{r}
+library(randomForest)
+library(caret)
+library(caTools)
+library(e1071)
+```
+
+Partition data into 80% training set and 20% test set. Stratify partitioning according the 30-day mortality status.
+```{r}
+sample = sample.split(d4$deathin30, SplitRatio = .8)
+train = subset(d4, sample == TRUE)
+test = subset(d4, sample == FALSE)
+trainControl(method = "cv", number = 5, search ="grid")
+trControl <- trainControl(method = "cv",
+    number = 5,
+    search = "grid")
+summary(train)
+```
+
+Train the models using the training set.
+```{r}
+rf <- train(deathin30 ~.,
+    data = train,
+    method = "rf",
+    metric = "Accuracy",
+    trControl = trControl,
+    nodesize = 19,
+    ntree = 10)
+print(rf)
+```
+
+Store the maximum accuracy as the output: in most interations the accuracy is greater than 90%, which is ideal.
+```{r}
+rf$bestTune$mtry
+max(rf$results$Accuracy)
+```
+
+
+Method 2: Logistic regression
+
+Required packages.
+```{r}
+library(caret)
+library(broom)
+library(glmnet)
+```
+
+Prepare the training and testing dataset.
+```{r}
+d5 <- d4 %>%
+  mutate_at(vars(deathin30),
+            function(x){
+              ifelse(x == "Yes", 1, 0)
+              })
+sample1 = sample.split(d5$deathin30, SplitRatio = .8)
+train1 = subset(d5, sample == TRUE)
+test1 = subset(d5, sample == FALSE)
+
+x_train = subset(train1[1:19]) %>% data.matrix()
+y_train = train1$deathin30 %>% data.matrix()
+x_test = subset(test1[1:19]) %>% data.matrix()
+y_test = subset(test1[20]) %>% data.matrix()
+```
+
+Train the model and predict the values.
+```{r}
+lambdas <- 10^seq(3, -2, by = -.1)
+fit <- glmnet(x_train, y_train, alpha = 0, lambda = lambdas)
+summary(fit)
+cv_fit <- cv.glmnet(x_train, y_train, alpha = 0, lambda = lambdas)
+
+# Get the opt_lamda
+opt_lambda <- cv_fit$lambda.min
+opt_lambda
+fit <- cv_fit$glmnet.fit
+y_predicted <- predict(fit, s = opt_lambda, newx = x_test)
+
+# R-Squared
+R2 <- sum((y_predicted - y_test)^2) / sum((y_test - mean(y_test))^2)
+R2
+```
+
+In most cases, the accuracy from the second method is also greater than 90%. 
+
+Thank you for your time.
