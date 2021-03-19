@@ -409,9 +409,12 @@ summary {
 ##  [9] stringr_1.4.0     xfun_0.19         digest_0.6.27     rlang_0.4.10     
 ## [13] evaluate_0.14</code></pre>
 <p>Load database libraries and the tidyverse frontend:</p>
-<pre class="r"><code>library(tidyverse)
+<pre class="r"><code>setwd(&quot;/home/mia.chen1998/biostat-203b-2021-winter/hw4&quot;)
+library(tidyverse)
 library(lubridate)
-library(miceRanger)</code></pre>
+library(miceRanger)
+library(dplyr)
+library(data.table)</code></pre>
 <div id="q1.-missing-data" class="section level2">
 <h2>Q1. Missing data</h2>
 <p>Through the Shiny app developed in HW3, we observe abundant missing values in the MIMIC-IV ICU cohort we created. In this question, we use multiple imputation to obtain a data set without missing values.</p>
@@ -435,22 +438,8 @@ library(miceRanger)</code></pre>
 <ol start="3" style="list-style-type: decimal">
 <li>Perform a data quality check of the ICU stays data. Discard variables with substantial missingness, say &gt;5000 <code>NA</code>s. Replace apparent data entry errors by <code>NA</code>s.</li>
 </ol>
-<pre class="r"><code>library(dplyr)
-library(data.table)</code></pre>
-<pre><code>## 
-## Attaching package: &#39;data.table&#39;</code></pre>
-<pre><code>## The following objects are masked from &#39;package:lubridate&#39;:
-## 
-##     hour, isoweek, mday, minute, month, quarter, second, wday, week,
-##     yday, year</code></pre>
-<pre><code>## The following objects are masked from &#39;package:dplyr&#39;:
-## 
-##     between, first, last</code></pre>
-<pre><code>## The following object is masked from &#39;package:purrr&#39;:
-## 
-##     transpose</code></pre>
 <pre class="r"><code># Read data
-df &lt;- readRDS(&quot;/home/mia.chen1998/biostat-203b-2021-winter/hw3/mimiciv_shiny/data/icu_cohort.rds&quot;)
+df &lt;- readRDS(&quot;icu_cohort.rds&quot;)
 
 # Delete Columns with more than 5000 missing values
 sapply(df, function(x) sum(is.na(x)))</code></pre>
@@ -511,39 +500,6 @@ selected_cols = c(&#39;bicarbonate&#39;, &#39;calcium&#39;, &#39;chloride&#39;,
 
 icu_tble &lt;- setDT(df[ , names(df) %in% selected_cols])
 head(icu_tble, 10)</code></pre>
-<pre><code>##     bicarbonate calcium chloride creatinine glucose magnesium hematocrit  wbc
-##  1:          23     9.2      103        2.2     144       2.0       30.8  5.4
-##  2:          24     9.5      109        3.4      86       2.2       30.9  7.4
-##  3:          19     8.0      107        0.8      89       1.7       26.4 20.7
-##  4:          23     7.5      109        0.7     124       1.9       21.2  9.2
-##  5:          26     9.7      103        1.0     204       2.3       36.6  6.7
-##  6:          23     8.4      113        1.0     115       2.2       25.9  5.3
-##  7:          26     7.7      107        0.6     102       1.8       31.6  4.4
-##  8:          19     8.2      108        1.2     115       2.1       32.1 14.1
-##  9:          33    10.0      103        0.3     116       2.0       35.5 13.2
-## 10:          21     9.0      106        0.5     159       2.1       34.6  4.9
-##     heart_rate non_invasive_blood_pressure_systolic
-##  1:         77                                  150
-##  2:         87                                  167
-##  3:        114                                  109
-##  4:         79                                   85
-##  5:         69                                  125
-##  6:         70                                   93
-##  7:         88                                  114
-##  8:         93                                  114
-##  9:        108                                  103
-## 10:         66                                  102
-##     non_invasive_blood_pressure_mean respiratory_rate temperature_fahrenheit
-##  1:                               92               23                   98.0
-##  2:                              117               22                   99.4
-##  3:                               70               20                   98.8
-##  4:                               60               16                   98.6
-##  5:                               83               15                   96.9
-##  6:                               62               18                   98.5
-##  7:                               83               19                   97.6
-##  8:                               84               16                   97.7
-##  9:                               69               20                   99.0
-## 10:                               75               20                   98.7</code></pre>
 <ol start="4" style="list-style-type: decimal">
 <li>Impute missing values by <code>miceRanger</code> (request <span class="math inline">\(m=3\)</span> datasets). This step is very computational intensive. Make sure to save the imputation results as a file.</li>
 </ol>
@@ -562,7 +518,7 @@ miceObj %&gt;%
 <ol start="5" style="list-style-type: decimal">
 <li>Make imputation diagnostic plots and explain what they mean.</li>
 </ol>
-<pre class="r"><code>Obj = readRDS(&quot;/home/mia.chen1998/biostat-203b-2021-winter/hw4/Obj.rds&quot;)</code></pre>
+<pre class="r"><code>Obj = readRDS(&quot;Obj.rds&quot;)</code></pre>
 <p>First we can check the plot of distribution for the original dataset (in red) with the imputed dataset (in black). As we can see most of them matched well. Unmatchness might arise for heart rate and respiratory rate with the lines slightly unmatched. It would not cause a big problem but just telling us these two variables were not missing completely at random.</p>
 <pre class="r"><code># Distribution of Imputed Values
 plotDistributions(Obj, vars = &#39;allNumeric&#39;)</code></pre>
@@ -629,11 +585,551 @@ head(dataList[[1]],10)</code></pre>
 <div id="q2.-predicting-30-day-mortality" class="section level2">
 <h2>Q2. Predicting 30-day mortality</h2>
 <p>Develop at least two analytic approaches for predicting the 30-day mortality of patients admitted to ICU using demographic information (gender, age, marital status, ethnicity), first lab measurements during ICU stay, and first vital measurements during ICU stay. For example, you can use (1) logistic regression (<code>glm()</code> function), (2) logistic regression with lasso penalty (glmnet package), (3) random forest (randomForest package), or (4) neural network.</p>
-<ol style="list-style-type: decimal">
-<li><p>Partition data into 80% training set and 20% test set. Stratify partitioning according the 30-day mortality status.</p></li>
-<li><p>Train the models using the training set.</p></li>
-<li><p>Compare model prediction performance on the test set.</p></li>
-</ol>
+<p><strong>Solution:</strong> First we T=transform the data into the form we want, in particular, we make the 30-day mortality indicator numeric with no missing values</p>
+<pre class="r"><code>icu_cohort &lt;- readRDS(&quot;icu_cohort.rds&quot;) %&gt;%
+  print(width = Inf)  %&gt;%
+  mutate_at(vars(deathin30),
+            function(x){
+              ifelse(is.na(x) == TRUE, &quot;No&quot;, x)
+              })</code></pre>
+<pre><code>## # A tibble: 50,048 x 46
+##    subject_id  hadm_id  stay_id first_careunit                                  
+##         &lt;int&gt;    &lt;int&gt;    &lt;int&gt; &lt;chr&gt;                                           
+##  1   10000980 26913865 36742749 Medical Intensive Care Unit (MICU)              
+##  2   10004733 27411876 37003946 Medical/Surgical Intensive Care Unit (MICU/SICU)
+##  3   10006821 23295760 30272829 Medical/Surgical Intensive Care Unit (MICU/SICU)
+##  4   10009628 25926192 31786068 Cardiac Vascular Intensive Care Unit (CVICU)    
+##  5   10012261 27493974 30741264 Trauma SICU (TSICU)                             
+##  6   10012552 27089790 36574633 Cardiac Vascular Intensive Care Unit (CVICU)    
+##  7   10013419 29669860 31631748 Surgical Intensive Care Unit (SICU)             
+##  8   10014610 23258342 30950011 Cardiac Vascular Intensive Care Unit (CVICU)    
+##  9   10016742 29281842 39410091 Surgical Intensive Care Unit (SICU)             
+## 10   10017308 29888008 36392624 Neuro Surgical Intensive Care Unit (Neuro SICU) 
+##    last_careunit                                    intime             
+##    &lt;chr&gt;                                            &lt;dttm&gt;             
+##  1 Medical Intensive Care Unit (MICU)               2189-06-27 08:42:00
+##  2 Medical/Surgical Intensive Care Unit (MICU/SICU) 2174-12-04 11:28:24
+##  3 Medical/Surgical Intensive Care Unit (MICU/SICU) 2182-10-24 20:38:16
+##  4 Cardiac Vascular Intensive Care Unit (CVICU)     2153-09-19 09:54:49
+##  5 Trauma SICU (TSICU)                              2170-05-11 18:50:00
+##  6 Cardiac Vascular Intensive Care Unit (CVICU)     2140-03-25 14:37:26
+##  7 Surgical Intensive Care Unit (SICU)              2167-03-31 13:15:00
+##  8 Cardiac Vascular Intensive Care Unit (CVICU)     2173-12-20 09:55:34
+##  9 Surgical Intensive Care Unit (SICU)              2178-07-03 22:45:00
+## 10 Neuro Intermediate                               2142-08-06 09:56:53
+##    outtime                los gender anchor_age anchor_year anchor_year_group
+##    &lt;dttm&gt;               &lt;dbl&gt; &lt;chr&gt;       &lt;int&gt;       &lt;int&gt; &lt;chr&gt;            
+##  1 2189-06-27 20:38:27  0.498 F              73        2186 2008 - 2010      
+##  2 2174-12-12 20:03:01  8.36  M              51        2174 2014 - 2016      
+##  3 2182-10-26 06:02:42  1.39  F              61        2182 2008 - 2010      
+##  4 2153-09-21 16:39:06  2.28  M              58        2153 2011 - 2013      
+##  5 2170-05-14 23:59:03  3.21  M              68        2168 2008 - 2010      
+##  6 2140-03-28 18:25:54  3.16  M              78        2140 2014 - 2016      
+##  7 2167-04-01 14:56:13  1.07  M              40        2167 2008 - 2010      
+##  8 2173-12-24 06:12:53  3.85  M              66        2166 2008 - 2010      
+##  9 2178-07-08 20:34:44  4.91  F              58        2178 2014 - 2016      
+## 10 2142-08-16 11:41:42 10.1   F              60        2142 2017 - 2019      
+##    dod        admittime           dischtime           deathtime          
+##    &lt;date&gt;     &lt;dttm&gt;              &lt;dttm&gt;              &lt;dttm&gt;             
+##  1 NA         2189-06-27 07:38:00 2189-07-03 03:00:00 NA                 
+##  2 NA         2174-12-04 11:28:00 2174-12-27 14:00:00 NA                 
+##  3 NA         2182-10-24 20:36:00 2182-10-26 18:00:00 NA                 
+##  4 NA         2153-09-17 17:08:00 2153-09-25 13:20:00 NA                 
+##  5 NA         2170-05-11 17:09:00 2170-05-15 18:40:00 NA                 
+##  6 NA         2140-03-22 17:18:00 2140-03-30 14:10:00 NA                 
+##  7 NA         2167-03-31 12:03:00 2167-04-01 13:00:00 NA                 
+##  8 NA         2173-12-19 11:00:00 2173-12-26 14:15:00 NA                 
+##  9 NA         2178-07-03 21:13:00 2178-07-08 20:20:00 NA                 
+## 10 NA         2142-08-05 18:43:00 2142-08-16 11:01:00 NA                 
+##    admission_type admission_location     discharge_location       insurance
+##    &lt;chr&gt;          &lt;chr&gt;                  &lt;chr&gt;                    &lt;chr&gt;    
+##  1 EW EMER.       EMERGENCY ROOM         HOME HEALTH CARE         Medicare 
+##  2 URGENT         TRANSFER FROM HOSPITAL HOME HEALTH CARE         Medicaid 
+##  3 EW EMER.       PROCEDURE SITE         ACUTE HOSPITAL           Other    
+##  4 URGENT         TRANSFER FROM HOSPITAL HOME HEALTH CARE         Medicaid 
+##  5 EW EMER.       EMERGENCY ROOM         HOME HEALTH CARE         Medicare 
+##  6 URGENT         TRANSFER FROM HOSPITAL HOME HEALTH CARE         Medicare 
+##  7 EW EMER.       EMERGENCY ROOM         HOME                     Medicare 
+##  8 ELECTIVE       PHYSICIAN REFERRAL     SKILLED NURSING FACILITY Medicare 
+##  9 EW EMER.       EMERGENCY ROOM         SKILLED NURSING FACILITY Medicaid 
+## 10 EW EMER.       TRANSFER FROM HOSPITAL HOME                     Other    
+##    language marital_status ethnicity              edregtime          
+##    &lt;chr&gt;    &lt;chr&gt;          &lt;chr&gt;                  &lt;dttm&gt;             
+##  1 ENGLISH  MARRIED        BLACK/AFRICAN AMERICAN 2189-06-27 06:25:00
+##  2 ENGLISH  SINGLE         UNKNOWN                NA                 
+##  3 ENGLISH  MARRIED        WHITE                  NA                 
+##  4 ?        MARRIED        HISPANIC/LATINO        NA                 
+##  5 ENGLISH  MARRIED        BLACK/AFRICAN AMERICAN 2170-05-11 12:54:00
+##  6 ENGLISH  MARRIED        UNKNOWN                NA                 
+##  7 ENGLISH  SINGLE         WHITE                  2167-03-31 10:55:00
+##  8 ENGLISH  MARRIED        BLACK/AFRICAN AMERICAN NA                 
+##  9 ENGLISH  SINGLE         BLACK/AFRICAN AMERICAN 2178-07-03 17:39:00
+## 10 ENGLISH  MARRIED        WHITE                  2142-08-05 10:13:00
+##    edouttime           hospital_expire_flag age_at_adm bicarbonate calcium
+##    &lt;dttm&gt;                             &lt;int&gt;      &lt;dbl&gt;       &lt;dbl&gt;   &lt;dbl&gt;
+##  1 2189-06-27 08:42:00                    0         76          23     9.2
+##  2 NA                                     0         51          24     9.5
+##  3 NA                                     0         61          19     8  
+##  4 NA                                     0         58          23     7.5
+##  5 2170-05-11 18:50:00                    0         70          26     9.7
+##  6 NA                                     0         78          23     8.4
+##  7 2167-03-31 13:15:00                    0         40          26     7.7
+##  8 NA                                     0         73          19     8.2
+##  9 2178-07-03 22:45:00                    0         58          33    10  
+## 10 2142-08-06 10:21:00                    0         60          21     9  
+##    chloride creatinine glucose magnesium potassium sodium hematocrit   wbc
+##       &lt;dbl&gt;      &lt;dbl&gt;   &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;  &lt;dbl&gt;      &lt;dbl&gt; &lt;dbl&gt;
+##  1      103        2.2     144       2         4.2    139       30.8   5.4
+##  2      109        3.4      86       2.2       3.7    146       30.9   7.4
+##  3      107        0.8      89       1.7       3.6    142       26.4  20.7
+##  4      109        0.7     124       1.9       3.8    139       21.2   9.2
+##  5      103        1       204       2.3       4.5    140       36.6   6.7
+##  6      113        1       115       2.2       3.4    142       25.9   5.3
+##  7      107        0.6     102       1.8       4      135       31.6   4.4
+##  8      108        1.2     115       2.1       3.5    139       32.1  14.1
+##  9      103        0.3     116       2         3.7    143       35.5  13.2
+## 10      106        0.5     159       2.1       4.1    139       34.6   4.9
+##    lactate heart_rate non_invasive_blood_pressure_systolic
+##      &lt;dbl&gt;      &lt;dbl&gt;                                &lt;dbl&gt;
+##  1    NA           77                                  150
+##  2     0.8         87                                  167
+##  3     1          114                                  109
+##  4     3.6         79                                   85
+##  5    NA           69                                  125
+##  6     1.7         70                                   93
+##  7    NA           88                                  114
+##  8     3.9         93                                  114
+##  9     1.1        108                                  103
+## 10    NA           66                                  102
+##    non_invasive_blood_pressure_mean respiratory_rate temperature_fahrenheit
+##                               &lt;dbl&gt;            &lt;dbl&gt;                  &lt;dbl&gt;
+##  1                               92               23                   98  
+##  2                              117               22                   99.4
+##  3                               70               20                   98.8
+##  4                               60               16                   98.6
+##  5                               83               15                   96.9
+##  6                               62               18                   98.5
+##  7                               83               19                   97.6
+##  8                               84               16                   97.7
+##  9                               69               20                   99  
+## 10                               75               20                   98.7
+##    arterial_blood_pressure_systolic arterial_blood_pressure_mean deathin30
+##                               &lt;dbl&gt;                        &lt;dbl&gt; &lt;chr&gt;    
+##  1                               NA                           NA &lt;NA&gt;     
+##  2                               NA                           NA &lt;NA&gt;     
+##  3                               NA                           NA &lt;NA&gt;     
+##  4                               92                           61 &lt;NA&gt;     
+##  5                               NA                           NA &lt;NA&gt;     
+##  6                              147                           97 &lt;NA&gt;     
+##  7                               NA                           NA &lt;NA&gt;     
+##  8                              102                           76 &lt;NA&gt;     
+##  9                               NA                           NA &lt;NA&gt;     
+## 10                              115                           66 &lt;NA&gt;     
+## # … with 50,038 more rows</code></pre>
+<pre class="r"><code>deathin30 &lt;- icu_cohort$deathin30
+  # %&gt;%
+  # mutate_at(vars(deathin30),
+  #           function(x){
+  #             ifelse(x == &quot;Yes&quot;, 1, 0)
+  #           }) %&gt;%
+  # mutate_at(vars(deathin30),
+  #           function(x){
+  #             ifelse(is.na(x) == TRUE, 0, x)
+  #             })</code></pre>
+<p>Choose the columns with the categorical vars as required + the numerical vars with no more than 5000 missing values + subject_id + 30-day mortality indicator.</p>
+<pre class="r"><code>selected_cols_2 = c(&#39;gender&#39;,&#39;anchor_age&#39;,&#39;marital_status&#39;,&#39;ethnicity&#39;,
+                  &#39;bicarbonate&#39;, &#39;calcium&#39;, &#39;chloride&#39;,
+                  &#39;creatinine&#39;,&#39;glucose&#39;,&#39;magnesium&#39;,
+                  &#39;potassium&#39;,&#39;sodium&#39;, &#39;hematocrit&#39;, &#39;wbc&#39;,
+                  &#39;heart_rate&#39;, &#39;respiratory_rate&#39;, 
+                  &#39;non_invasive_blood_pressure_systolic&#39;, 
+                  &#39;non_invasive_blood_pressure_mean&#39;, 
+                  &#39;temperature_fahrenheit&#39;, &#39;deathin30&#39;)
+
+icu &lt;- setDT(icu_cohort[ , names(df) %in% selected_cols_2])
+head(icu, 10)
+summary(icu)</code></pre>
+<p>Identify and remove the outliers</p>
+<pre class="r"><code>library(tidyverse)
+columns_to_do &lt;- names(select_if(icu, is.numeric))
+
+do_col &lt;- function(c){
+b &lt;- boxplot(c, plot = FALSE)
+s1 &lt;- c
+s1[which(c %in% b$out)] = NA
+return(s1)
+}
+
+icu1 &lt;- mutate_if(icu, is.numeric, do_col)</code></pre>
+<p>Impute the dataset with miceRanger:</p>
+<pre class="r"><code>require(miceRanger)
+seqTime &lt;- system.time(
+  miceObj &lt;- miceRanger(
+    icu1
+    , m = 3
+    , max.depth = 10
+    , returnModels = TRUE
+    , verbose = TRUE
+  )
+)
+
+saveRDS(miceObj, file=&quot;icu_MICE.rds&quot;)</code></pre>
+<p>Read in the imputed datasets and take the average:</p>
+<pre class="r"><code>Obj1 &lt;- readRDS(&quot;icu_MICE.rds&quot;)
+ICU &lt;- completeData(Obj1)
+dummy &lt;- c(&#39;gender&#39;, &#39;marital_status&#39;)
+d &lt;- as.data.frame(ICU$Dataset_1)
+d1 &lt;- data.matrix(ICU$Dataset_1)</code></pre>
+<pre><code>## Warning in data.matrix(ICU$Dataset_1): NAs introduced by coercion
+
+## Warning in data.matrix(ICU$Dataset_1): NAs introduced by coercion
+
+## Warning in data.matrix(ICU$Dataset_1): NAs introduced by coercion</code></pre>
+<pre class="r"><code>d2 &lt;- data.matrix(ICU$Dataset_2)</code></pre>
+<pre><code>## Warning in data.matrix(ICU$Dataset_2): NAs introduced by coercion</code></pre>
+<pre><code>## Warning in data.matrix(ICU$Dataset_2): NAs introduced by coercion
+
+## Warning in data.matrix(ICU$Dataset_2): NAs introduced by coercion</code></pre>
+<pre class="r"><code>d3 &lt;- data.matrix(ICU$Dataset_3)</code></pre>
+<pre><code>## Warning in data.matrix(ICU$Dataset_3): NAs introduced by coercion</code></pre>
+<pre><code>## Warning in data.matrix(ICU$Dataset_3): NAs introduced by coercion
+
+## Warning in data.matrix(ICU$Dataset_3): NAs introduced by coercion</code></pre>
+<pre class="r"><code>d4 &lt;- as.data.frame((d1 + d2 + d3)/3)
+d4$gender &lt;- as.numeric(as.factor(d$gender))
+d4$marital_status &lt;- as.numeric(as.factor(d$marital_status))
+d4$ethnicity &lt;- as.numeric(as.factor(d$ethnicity))
+d4$deathin30 &lt;- icu_cohort$deathin30
+# d4 is the dataframe we going to use eventually
+is.data.frame(d4)</code></pre>
+<pre><code>## [1] TRUE</code></pre>
+<pre class="r"><code>summary(d4)</code></pre>
+<pre><code>##    subject_id           gender     marital_status    ethnicity    
+##  Min.   :10000032   Min.   :1.00   Min.   :1.000   Min.   :1.000  
+##  1st Qu.:12485686   1st Qu.:1.00   1st Qu.:2.000   1st Qu.:7.000  
+##  Median :14997274   Median :2.00   Median :2.000   Median :8.000  
+##  Mean   :14993100   Mean   :1.56   Mean   :2.487   Mean   :6.939  
+##  3rd Qu.:17501993   3rd Qu.:2.00   3rd Qu.:3.000   3rd Qu.:8.000  
+##  Max.   :19999987   Max.   :2.00   Max.   :4.000   Max.   :8.000  
+##   bicarbonate       calcium          chloride       creatinine    
+##  Min.   :13.50   Min.   : 6.600   Min.   : 91.0   Min.   :0.0000  
+##  1st Qu.:21.00   1st Qu.: 7.900   1st Qu.:101.0   1st Qu.:0.7000  
+##  Median :23.00   Median : 8.400   Median :105.0   Median :0.9000  
+##  Mean   :23.17   Mean   : 8.345   Mean   :104.8   Mean   :0.9837  
+##  3rd Qu.:25.00   3rd Qu.: 8.800   3rd Qu.:108.0   3rd Qu.:1.2000  
+##  Max.   :33.00   Max.   :10.100   Max.   :118.0   Max.   :2.2000  
+##     glucose      magnesium       potassium         sodium        hematocrit   
+##  Min.   : 24   Min.   :1.000   Min.   :2.600   Min.   :129.0   Min.   :14.50  
+##  1st Qu.:103   1st Qu.:1.700   1st Qu.:3.700   1st Qu.:136.0   1st Qu.:28.20  
+##  Median :122   Median :1.933   Median :4.100   Median :139.0   Median :32.60  
+##  Mean   :128   Mean   :1.962   Mean   :4.107   Mean   :138.7   Mean   :32.71  
+##  3rd Qu.:148   3rd Qu.:2.200   3rd Qu.:4.500   3rd Qu.:141.0   3rd Qu.:37.20  
+##  Max.   :235   Max.   :2.900   Max.   :5.600   Max.   :148.0   Max.   :50.80  
+##       wbc          heart_rate     non_invasive_blood_pressure_systolic
+##  Min.   : 0.00   Min.   : 37.00   Min.   : 57                         
+##  1st Qu.: 7.60   1st Qu.: 74.00   1st Qu.:106                         
+##  Median :10.40   Median : 85.00   Median :122                         
+##  Mean   :10.96   Mean   : 86.73   Mean   :123                         
+##  3rd Qu.:13.80   3rd Qu.: 98.00   3rd Qu.:139                         
+##  Max.   :24.60   Max.   :136.00   Max.   :188                         
+##  non_invasive_blood_pressure_mean respiratory_rate temperature_fahrenheit
+##  Min.   : 33.00                   Min.   : 5.00    Min.   : 96.00        
+##  1st Qu.: 69.00                   1st Qu.:15.00    1st Qu.: 97.70        
+##  Median : 80.00                   Median :18.00    Median : 98.10        
+##  Mean   : 81.41                   Mean   :18.27    Mean   : 98.15        
+##  3rd Qu.: 92.00                   3rd Qu.:22.00    3rd Qu.: 98.60        
+##  Max.   :129.00                   Max.   :32.00    Max.   :100.30        
+##   deathin30        
+##  Length:50048      
+##  Class :character  
+##  Mode  :character  
+##                    
+##                    
+## </code></pre>
+<p>Now we can use the imputed dataset to predict the 30-day mortality status.</p>
+<p><strong>Solution:</strong> Method 1: Random Forest</p>
+<p>Load the required packages.</p>
+<pre class="r"><code>library(randomForest)</code></pre>
+<pre><code>## randomForest 4.6-14</code></pre>
+<pre><code>## Type rfNews() to see new features/changes/bug fixes.</code></pre>
+<pre><code>## 
+## Attaching package: &#39;randomForest&#39;</code></pre>
+<pre><code>## The following object is masked from &#39;package:dplyr&#39;:
+## 
+##     combine</code></pre>
+<pre><code>## The following object is masked from &#39;package:ggplot2&#39;:
+## 
+##     margin</code></pre>
+<pre class="r"><code>library(caret)</code></pre>
+<pre><code>## Loading required package: lattice</code></pre>
+<pre><code>## 
+## Attaching package: &#39;caret&#39;</code></pre>
+<pre><code>## The following object is masked from &#39;package:purrr&#39;:
+## 
+##     lift</code></pre>
+<pre class="r"><code>library(caTools)
+library(e1071)</code></pre>
+<pre><code>## 
+## Attaching package: &#39;e1071&#39;</code></pre>
+<pre><code>## The following object is masked from &#39;package:miceRanger&#39;:
+## 
+##     impute</code></pre>
+<p>Partition data into 80% training set and 20% test set. Stratify partitioning according the 30-day mortality status.</p>
+<pre class="r"><code>sample = sample.split(d4$deathin30, SplitRatio = .8)
+train = subset(d4, sample == TRUE)
+test = subset(d4, sample == FALSE)
+trainControl(method = &quot;cv&quot;, number = 5, search =&quot;grid&quot;)</code></pre>
+<pre><code>## $method
+## [1] &quot;cv&quot;
+## 
+## $number
+## [1] 5
+## 
+## $repeats
+## [1] NA
+## 
+## $search
+## [1] &quot;grid&quot;
+## 
+## $p
+## [1] 0.75
+## 
+## $initialWindow
+## NULL
+## 
+## $horizon
+## [1] 1
+## 
+## $fixedWindow
+## [1] TRUE
+## 
+## $skip
+## [1] 0
+## 
+## $verboseIter
+## [1] FALSE
+## 
+## $returnData
+## [1] TRUE
+## 
+## $returnResamp
+## [1] &quot;final&quot;
+## 
+## $savePredictions
+## [1] FALSE
+## 
+## $classProbs
+## [1] FALSE
+## 
+## $summaryFunction
+## function (data, lev = NULL, model = NULL) 
+## {
+##     if (is.character(data$obs)) 
+##         data$obs &lt;- factor(data$obs, levels = lev)
+##     postResample(data[, &quot;pred&quot;], data[, &quot;obs&quot;])
+## }
+## &lt;bytecode: 0x558afe90&gt;
+## &lt;environment: namespace:caret&gt;
+## 
+## $selectionFunction
+## [1] &quot;best&quot;
+## 
+## $preProcOptions
+## $preProcOptions$thresh
+## [1] 0.95
+## 
+## $preProcOptions$ICAcomp
+## [1] 3
+## 
+## $preProcOptions$k
+## [1] 5
+## 
+## $preProcOptions$freqCut
+## [1] 19
+## 
+## $preProcOptions$uniqueCut
+## [1] 10
+## 
+## $preProcOptions$cutoff
+## [1] 0.9
+## 
+## 
+## $sampling
+## NULL
+## 
+## $index
+## NULL
+## 
+## $indexOut
+## NULL
+## 
+## $indexFinal
+## NULL
+## 
+## $timingSamps
+## [1] 0
+## 
+## $predictionBounds
+## [1] FALSE FALSE
+## 
+## $seeds
+## [1] NA
+## 
+## $adaptive
+## $adaptive$min
+## [1] 5
+## 
+## $adaptive$alpha
+## [1] 0.05
+## 
+## $adaptive$method
+## [1] &quot;gls&quot;
+## 
+## $adaptive$complete
+## [1] TRUE
+## 
+## 
+## $trim
+## [1] FALSE
+## 
+## $allowParallel
+## [1] TRUE</code></pre>
+<pre class="r"><code>trControl &lt;- trainControl(method = &quot;cv&quot;,
+    number = 5,
+    search = &quot;grid&quot;)
+summary(train)</code></pre>
+<pre><code>##    subject_id           gender      marital_status    ethnicity    
+##  Min.   :10000032   Min.   :1.000   Min.   :1.000   Min.   :1.000  
+##  1st Qu.:12462842   1st Qu.:1.000   1st Qu.:2.000   1st Qu.:7.000  
+##  Median :14978282   Median :2.000   Median :2.000   Median :8.000  
+##  Mean   :14977123   Mean   :1.561   Mean   :2.481   Mean   :6.945  
+##  3rd Qu.:17475757   3rd Qu.:2.000   3rd Qu.:3.000   3rd Qu.:8.000  
+##  Max.   :19999840   Max.   :2.000   Max.   :4.000   Max.   :8.000  
+##   bicarbonate       calcium          chloride       creatinine    
+##  Min.   :13.50   Min.   : 6.600   Min.   : 91.0   Min.   :0.0000  
+##  1st Qu.:21.00   1st Qu.: 7.900   1st Qu.:101.0   1st Qu.:0.7000  
+##  Median :23.00   Median : 8.400   Median :105.0   Median :0.9000  
+##  Mean   :23.17   Mean   : 8.346   Mean   :104.8   Mean   :0.9828  
+##  3rd Qu.:25.00   3rd Qu.: 8.800   3rd Qu.:108.0   3rd Qu.:1.2000  
+##  Max.   :33.00   Max.   :10.100   Max.   :118.0   Max.   :2.2000  
+##     glucose      magnesium       potassium         sodium        hematocrit  
+##  Min.   : 24   Min.   :1.000   Min.   :2.600   Min.   :129.0   Min.   :14.5  
+##  1st Qu.:103   1st Qu.:1.700   1st Qu.:3.700   1st Qu.:136.0   1st Qu.:28.2  
+##  Median :122   Median :1.933   Median :4.100   Median :139.0   Median :32.7  
+##  Mean   :128   Mean   :1.963   Mean   :4.109   Mean   :138.7   Mean   :32.7  
+##  3rd Qu.:148   3rd Qu.:2.200   3rd Qu.:4.500   3rd Qu.:141.0   3rd Qu.:37.1  
+##  Max.   :235   Max.   :2.900   Max.   :5.600   Max.   :148.0   Max.   :50.8  
+##       wbc          heart_rate     non_invasive_blood_pressure_systolic
+##  Min.   : 0.00   Min.   : 37.00   Min.   : 57.0                       
+##  1st Qu.: 7.60   1st Qu.: 74.00   1st Qu.:106.0                       
+##  Median :10.40   Median : 85.00   Median :122.0                       
+##  Mean   :10.96   Mean   : 86.67   Mean   :123.1                       
+##  3rd Qu.:13.80   3rd Qu.: 98.00   3rd Qu.:139.0                       
+##  Max.   :24.60   Max.   :136.00   Max.   :188.0                       
+##  non_invasive_blood_pressure_mean respiratory_rate temperature_fahrenheit
+##  Min.   : 33.00                   Min.   : 5.00    Min.   : 96.00        
+##  1st Qu.: 70.00                   1st Qu.:15.00    1st Qu.: 97.70        
+##  Median : 80.00                   Median :18.00    Median : 98.10        
+##  Mean   : 81.41                   Mean   :18.25    Mean   : 98.15        
+##  3rd Qu.: 92.00                   3rd Qu.:22.00    3rd Qu.: 98.60        
+##  Max.   :129.00                   Max.   :32.00    Max.   :100.30        
+##   deathin30        
+##  Length:40038      
+##  Class :character  
+##  Mode  :character  
+##                    
+##                    
+## </code></pre>
+<p>Train the models using the training set.</p>
+<pre class="r"><code>rf &lt;- train(deathin30 ~.,
+    data = train,
+    method = &quot;rf&quot;,
+    metric = &quot;Accuracy&quot;,
+    trControl = trControl,
+    nodesize = 19,
+    ntree = 10)
+print(rf)</code></pre>
+<pre><code>## Random Forest 
+## 
+## 40038 samples
+##    19 predictor
+##     2 classes: &#39;No&#39;, &#39;Yes&#39; 
+## 
+## No pre-processing
+## Resampling: Cross-Validated (5 fold) 
+## Summary of sample sizes: 32031, 32030, 32031, 32029, 32031 
+## Resampling results across tuning parameters:
+## 
+##   mtry  Accuracy   Kappa     
+##    2    0.9011939  0.04037541
+##   10    0.8982217  0.08250453
+##   19    0.8969229  0.09582951
+## 
+## Accuracy was used to select the optimal model using the largest value.
+## The final value used for the model was mtry = 2.</code></pre>
+<p>Store the maximum accuracy as the output: in most interations the accuracy is greater than 90%, which is ideal.</p>
+<pre class="r"><code>rf$bestTune$mtry</code></pre>
+<pre><code>## [1] 2</code></pre>
+<pre class="r"><code>max(rf$results$Accuracy)</code></pre>
+<pre><code>## [1] 0.9011939</code></pre>
+<p>Method 2: Logistic regression</p>
+<p>Required packages.</p>
+<pre class="r"><code>library(caret)
+library(broom)
+library(glmnet)</code></pre>
+<pre><code>## Loading required package: Matrix</code></pre>
+<pre><code>## 
+## Attaching package: &#39;Matrix&#39;</code></pre>
+<pre><code>## The following objects are masked from &#39;package:tidyr&#39;:
+## 
+##     expand, pack, unpack</code></pre>
+<pre><code>## Loaded glmnet 4.1</code></pre>
+<p>Prepare the training and testing dataset.</p>
+<pre class="r"><code>d5 &lt;- d4 %&gt;%
+  mutate_at(vars(deathin30),
+            function(x){
+              ifelse(x == &quot;Yes&quot;, 1, 0)
+              })
+sample1 = sample.split(d5$deathin30, SplitRatio = .8)
+train1 = subset(d5, sample == TRUE)
+test1 = subset(d5, sample == FALSE)
+
+x_train = subset(train1[1:19]) %&gt;% data.matrix()
+y_train = train1$deathin30 %&gt;% data.matrix()
+x_test = subset(test1[1:19]) %&gt;% data.matrix()
+y_test = subset(test1[20]) %&gt;% data.matrix()</code></pre>
+<p>Train the model and predict the values.</p>
+<pre class="r"><code>lambdas &lt;- 10^seq(3, -2, by = -.1)
+fit &lt;- glmnet(x_train, y_train, alpha = 0, lambda = lambdas)
+summary(fit)</code></pre>
+<pre><code>##           Length Class     Mode   
+## a0         51    -none-    numeric
+## beta      969    dgCMatrix S4     
+## df         51    -none-    numeric
+## dim         2    -none-    numeric
+## lambda     51    -none-    numeric
+## dev.ratio  51    -none-    numeric
+## nulldev     1    -none-    numeric
+## npasses     1    -none-    numeric
+## jerr        1    -none-    numeric
+## offset      1    -none-    logical
+## call        5    -none-    call   
+## nobs        1    -none-    numeric</code></pre>
+<pre class="r"><code>cv_fit &lt;- cv.glmnet(x_train, y_train, alpha = 0, lambda = lambdas)
+
+# Get the opt_lamda
+opt_lambda &lt;- cv_fit$lambda.min
+opt_lambda</code></pre>
+<pre><code>## [1] 0.01</code></pre>
+<pre class="r"><code>fit &lt;- cv_fit$glmnet.fit
+y_predicted &lt;- predict(fit, s = opt_lambda, newx = x_test)
+
+# R-Squared
+R2 &lt;- sum((y_predicted - y_test)^2) / sum((y_test - mean(y_test))^2)
+R2</code></pre>
+<pre><code>## [1] 0.9351585</code></pre>
+<p>In most cases, the accuracy from the second method is also greater than 90%.</p>
+<p>Thank you for your time.</p>
 </div>
 
 
